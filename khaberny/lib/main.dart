@@ -8,6 +8,7 @@ import 'screens/citizen_signup_screen.dart';
 import 'screens/advertiser_signup_screen.dart';
 import 'screens/citizen_home_screen.dart';
 import 'screens/advertiser_home_screen.dart';
+import 'screens/sign_in_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         '/advertiserSignup': (context) => AdvertiserSignUpScreen(),
         '/citizenHome': (context) => CitizenHomeScreen(),
         '/advertiserHome': (context) => AdvertiserHomeScreen(),
+        '/signIn': (context) => SignInScreen(),
       },
     );
   }

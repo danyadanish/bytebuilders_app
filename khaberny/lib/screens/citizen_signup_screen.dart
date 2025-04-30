@@ -169,6 +169,22 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/signIn'); // Redirect to the login page
+                            },
+                            child: Text(
+                              "Already have an account? Sign in here",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13,
+                                fontFamily: 'Cairo',
+                                decoration: TextDecoration.underline,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ],
                       ),
                     ),
