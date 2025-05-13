@@ -1,4 +1,4 @@
-class Notification {
+class Notifications {
   final String id;
   final String userId;  // Recipient user ID
   final String title;
@@ -13,7 +13,7 @@ class Notification {
   final String? actionType;  // Type of action required/suggested, if any
   final String? actionData;  // Data needed for the action
   
-  Notification({
+  Notifications({
     required this.id,
     required this.userId,
     required this.title,
@@ -48,8 +48,8 @@ class Notification {
     };
   }
   
-  factory Notification.fromJson(Map<String, dynamic> json) {
-    return Notification(
+  factory Notifications.fromJson(Map<String, dynamic> json) {
+    return Notifications(
       id: json['id'],
       userId: json['userId'],
       title: json['title'],
