@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "894544792845",
+    "project_id": "khaberny-45d80",
+    "storage_bucket": "khaberny-45d80.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894544792845:android:708308162388af553cf444",
+        "android_client_info": {
+          "package_name": "com.example.khaberny"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHuBbSqOMJ01lTSaCb-BEPOj6G9TcVc3I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
