@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class CitizenSignUpScreen extends StatefulWidget {
+  const CitizenSignUpScreen({super.key});
+
   @override
   _CitizenSignUpScreenState createState() => _CitizenSignUpScreenState();
 }
@@ -133,18 +135,24 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                           ),
                           const SizedBox(height: 24),
                           buildTextField("Full Name", nameController),
-                          buildTextField("Email", emailController, type: TextInputType.emailAddress),
-                          buildTextField("Phone", phoneController, type: TextInputType.phone),
+                          buildTextField("Email", emailController,
+                              type: TextInputType.emailAddress),
+                          buildTextField("Phone", phoneController,
+                              type: TextInputType.phone),
                           GestureDetector(
                             onTap: _selectDate,
                             child: AbsorbPointer(
-                              child: buildTextField("Date of Birth (YYYY-MM-DD)", dobController),
+                              child: buildTextField(
+                                  "Date of Birth (YYYY-MM-DD)", dobController),
                             ),
                           ),
                           buildTextField("Country", countryController),
                           buildTextField("City", cityController),
-                          buildTextField("Password", passwordController, isPassword: true),
-                          buildTextField("Confirm Password", confirmPasswordController, isPassword: true),
+                          buildTextField("Password", passwordController,
+                              isPassword: true),
+                          buildTextField(
+                              "Confirm Password", confirmPasswordController,
+                              isPassword: true),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
@@ -172,7 +180,8 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                           const SizedBox(height: 16),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(context, '/signIn'); // Redirect to the login page
+                              Navigator.pushNamed(context,
+                                  '/signIn'); // Redirect to the login page
                             },
                             child: Text(
                               "Already have an account? Sign in here",
@@ -217,7 +226,8 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
             borderSide: BorderSide.none,
           ),
         ),
-        validator: (value) => value == null || value.isEmpty ? "Required field" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "Required field" : null,
       ),
     );
   }

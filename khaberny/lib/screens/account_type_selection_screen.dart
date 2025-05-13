@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AccountTypeSelectionScreen extends StatelessWidget {
+  const AccountTypeSelectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +41,8 @@ class AccountTypeSelectionScreen extends StatelessWidget {
                         description:
                             'Add your Advertisements to our Platform to allow others to see your services.',
                         image: 'assets/ads.jpg',
-                        onTap: () => Navigator.pushNamed(context, '/advertiserSignup'),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/advertiserSignup'),
                       ),
                       const SizedBox(height: 28),
                       AccountTypeCard(
@@ -49,7 +52,8 @@ class AccountTypeSelectionScreen extends StatelessWidget {
                         description:
                             'Find out important Government Announcements, Access Emergency Services quickly, Engage with Government Institutions directly.',
                         image: 'assets/citizen.jpg',
-                        onTap: () => Navigator.pushNamed(context, '/citizenSignup'),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/citizenSignup'),
                       ),
                     ],
                   ),
@@ -72,6 +76,7 @@ class AccountTypeCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const AccountTypeCard({
+    super.key,
     required this.title,
     required this.description,
     required this.image,
@@ -82,7 +87,8 @@ class AccountTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector( // 🔥 enables tapping
+    return GestureDetector(
+      // 🔥 enables tapping
       onTap: onTap,
       child: Container(
         height: 170,

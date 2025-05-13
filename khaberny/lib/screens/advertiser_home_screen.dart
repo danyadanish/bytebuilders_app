@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AdvertiserHomeScreen extends StatelessWidget {
+  const AdvertiserHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +29,8 @@ class AdvertiserHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTile(BuildContext context, IconData icon, String label, String route) {
+  Widget _buildTile(
+      BuildContext context, IconData icon, String label, String route) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, route);

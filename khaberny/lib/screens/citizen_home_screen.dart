@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class CitizenHomeScreen extends StatelessWidget {
+  const CitizenHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,17 +20,21 @@ class CitizenHomeScreen extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
-            _buildTile(context, Icons.announcement, "Announcements", "/announcements"),
+            _buildTile(
+                context, Icons.announcement, "Announcements", "/announcements"),
             _buildTile(context, Icons.how_to_vote, "Polls", "/polls"),
-            _buildTile(context, Icons.report_problem, "Report Issue", "/report"),
-            _buildTile(context, Icons.phone_in_talk, "Emergency Numbers", "/emergency"),
+            _buildTile(
+                context, Icons.report_problem, "Report Issue", "/report"),
+            _buildTile(context, Icons.phone_in_talk, "Emergency Numbers",
+                "/emergency"),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTile(BuildContext context, IconData icon, String label, String route) {
+  Widget _buildTile(
+      BuildContext context, IconData icon, String label, String route) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, route);

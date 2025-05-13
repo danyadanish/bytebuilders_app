@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
+
   @override
   _SignInScreenState createState() => _SignInScreenState();
 }
@@ -17,7 +19,8 @@ class _SignInScreenState extends State<SignInScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         // Sign in the user
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
@@ -26,21 +29,25 @@ class _SignInScreenState extends State<SignInScreen> {
         User? user = userCredential.user;
         if (user != null) {
           DocumentSnapshot userDoc = await FirebaseFirestore.instance
-              .collection('users') // Replace with your Firestore collection name
+              .collection(
+                  'users') // Replace with your Firestore collection name
               .doc(user.uid)
               .get();
 
           if (userDoc.exists) {
-            String role = userDoc['role']; // Assuming 'role' field exists in Firestore
+            String role =
+                userDoc['role']; // Assuming 'role' field exists in Firestore
             if (role == 'citizen') {
               Navigator.pushReplacementNamed(context, '/citizenHome');
             } else if (role == 'advertiser') {
               Navigator.pushReplacementNamed(context, '/advertiserHome');
             } else {
-              Fluttertoast.showToast(msg: "Unknown role. Please contact support.");
+              Fluttertoast.showToast(
+                  msg: "Unknown role. Please contact support.");
             }
           } else {
-            Fluttertoast.showToast(msg: "User data not found. Please contact support.");
+            Fluttertoast.showToast(
+                msg: "User data not found. Please contact support.");
           }
         }
       } catch (e) {
@@ -104,8 +111,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    _buildTextField("Email", emailController, type: TextInputType.emailAddress),
-                    _buildTextField("Password", passwordController, isPassword: true),
+                    _buildTextField("Email", emailController,
+                        type: TextInputType.emailAddress),
+                    _buildTextField("Password", passwordController,
+                        isPassword: true),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -166,7 +175,8 @@ class _SignInScreenState extends State<SignInScreen> {
         style: TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+          labelStyle:
+              TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
           filled: true,
           fillColor: Colors.white.withOpacity(0.2),
           border: OutlineInputBorder(
@@ -174,7 +184,8 @@ class _SignInScreenState extends State<SignInScreen> {
             borderSide: BorderSide.none,
           ),
         ),
-        validator: (value) => value == null || value.isEmpty ? "Required field" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "Required field" : null,
       ),
     );
   }

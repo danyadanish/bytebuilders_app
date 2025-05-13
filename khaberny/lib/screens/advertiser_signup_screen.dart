@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class AdvertiserSignUpScreen extends StatefulWidget {
+  const AdvertiserSignUpScreen({super.key});
+
   @override
   _AdvertiserSignUpScreenState createState() => _AdvertiserSignUpScreenState();
 }
@@ -92,7 +94,8 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(199, 107, 122, 161).withOpacity(0.45),
+                        color: const Color.fromARGB(199, 107, 122, 161)
+                            .withOpacity(0.45),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
@@ -118,13 +121,18 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                           ),
                           const SizedBox(height: 24),
                           buildTextField("Full Name", nameController),
-                          buildTextField("Email", emailController, type: TextInputType.emailAddress),
+                          buildTextField("Email", emailController,
+                              type: TextInputType.emailAddress),
                           buildTextField("Company Name", companyController),
                           buildTextField("Industry", industryController),
                           buildTextField("Country", countryController),
-                          buildTextField("Phone", phoneController, type: TextInputType.phone),
-                          buildTextField("Password", passwordController, isPassword: true),
-                          buildTextField("Confirm Password", confirmPasswordController, isPassword: true),
+                          buildTextField("Phone", phoneController,
+                              type: TextInputType.phone),
+                          buildTextField("Password", passwordController,
+                              isPassword: true),
+                          buildTextField(
+                              "Confirm Password", confirmPasswordController,
+                              isPassword: true),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
@@ -152,7 +160,8 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                           const SizedBox(height: 16),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(context, '/signIn'); // Redirect to the login page
+                              Navigator.pushNamed(context,
+                                  '/signIn'); // Redirect to the login page
                             },
                             child: Text(
                               "Already have an account? Sign in here",
@@ -189,7 +198,8 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
         style: TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+          labelStyle:
+              TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
           filled: true,
           fillColor: Colors.white.withOpacity(0.45),
           border: OutlineInputBorder(
@@ -197,7 +207,8 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
             borderSide: BorderSide.none,
           ),
         ),
-        validator: (value) => value == null || value.isEmpty ? "Required field" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "Required field" : null,
       ),
     );
   }
