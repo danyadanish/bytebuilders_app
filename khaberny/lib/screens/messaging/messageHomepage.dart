@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MessageHomepage extends StatefulWidget {
+  const MessageHomepage({super.key});
+
   @override
   _MessageHomepageState createState() => _MessageHomepageState();
 }
@@ -63,8 +65,8 @@ class _MessageHomepageState extends State<MessageHomepage> {
                       opacity: 0.8,
                       child: ListTile(
                         leading: CircleAvatar(
-                          child: Icon(Icons.person, color: Color(0xFFFEFCFB)),
                           backgroundColor: Color(0xFF6C91BF),
+                          child: Icon(Icons.person, color: Color(0xFFFEFCFB)),
                         ),
                         title: Text(
                           'User $index',
