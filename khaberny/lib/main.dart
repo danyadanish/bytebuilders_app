@@ -9,6 +9,16 @@ import 'screens/advertisers/advertiser_signup_screen.dart';
 import 'screens/citizen/citizen_home_screen.dart';
 import 'screens/advertisers/advertiser_home_screen.dart';
 import 'screens/sign_in_screen.dart';
+import 'screens/advertiser/advertiser_main_screen.dart';
+import 'screens/advertiser/my_advertisements_screen.dart';
+import 'screens/advertiser/add_advertisement_screen.dart';
+import 'screens/advertiser/advertiser_profile_screen.dart';
+import 'screens/government/GovernmentHomeScreen.dart';
+import 'screens/government/GovernmentMainScreen.dart';
+import 'screens/government/GovernmentFeedScreen.dart';
+import 'screens/government/approve_ads_screen.dart';
+import 'screens/government/create_poll_screen.dart';
+import 'screens/government/poll_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +49,17 @@ class MyApp extends StatelessWidget {
         '/citizenHome': (context) => CitizenHomeScreen(),
         '/advertiserHome': (context) => AdvertiserHomeScreen(),
         '/signIn': (context) => SignInScreen(),
+        '/advertiser': (context) => const AdvertiserMainScreen(),
+        '/createAd': (context) => AddAdvertisementScreen(),
+        '/myAds': (context) => MyAdvertisementsScreen(),
+        '/profile': (context) => AdvertiserProfileScreen(),
+        '/reportOverview': (context) => const Placeholder(),
+        '/governmentHome': (context) => const GovernmentHomeScreen(),
+        '/governmentHome': (context) => const GovernmentMainScreen(),
+        '/government': (context) => const GovernmentFeedScreen(),
+        '/approveAds': (context) => const ApproveAdsScreen(),
+        '/createPoll': (context) => const CreatePollScreen(),
+        '/polls': (context) => const PollListScreen(),
       },
     );
   }
