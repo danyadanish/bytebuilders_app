@@ -13,15 +13,22 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
 
-  # Firebase dependencies - updated for compatibility
-  firebase_auth: ^5.5.3
+  #  Firebase dependencies (compatible versions)
   firebase_core: ^3.13.0
-  firebase_messaging: ^15.2.5
+  firebase_auth: ^5.5.3
   cloud_firestore: ^5.6.7
-  flutter_local_notifications: ^19.2.0
+  firebase_storage: ^12.4.5
+  firebase_messaging: ^15.2.5  
 
-  # Toast messages - downgraded as suggested by error message
-  fluttertoast: ^8.2.8
+  # Image picker for selecting ad images
+  image_picker: ^1.0.7
+
+  # Toast messages
+  fluttertoast: ^8.2.9
+
+  #  Charts and Progress Indicators for Ad Report
+  percent_indicator: ^4.2.2
+  fl_chart: ^0.64.0
 
 dev_dependencies:
   flutter_test:
@@ -29,12 +36,15 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
+
   uses-material-design: true
 
   assets:
     - assets/images/khaberny_background.png
     - assets/ads.jpg
     - assets/citizen.jpg
+    - assets/avatar.png
+    - assets/images/government.jpg
 
   fonts:
     - family: Cairo
