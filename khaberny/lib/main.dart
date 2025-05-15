@@ -4,15 +4,15 @@ import 'package:firebase_core/firebase_core.dart';
 // Screens
 import 'screens/splash_screen.dart';
 import 'screens/account_type_selection_screen.dart';
-import 'screens/citizen_signup_screen.dart';
-import 'screens/advertiser_signup_screen.dart';
-import 'screens/citizen_home_screen.dart';
-import 'screens/advertiser_home_screen.dart';
+import 'screens/citizen/citizen_signup_screen.dart';
+import 'screens/advertisers/advertiser_signup_screen.dart';
+import 'screens/citizen/citizen_home_screen.dart';
+import 'screens/advertisers/advertiser_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); 
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
