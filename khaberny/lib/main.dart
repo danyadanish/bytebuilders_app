@@ -18,6 +18,8 @@ import 'screens/government/GovernmentFeedScreen.dart';
 import 'screens/government/approve_ads_screen.dart';
 import 'screens/government/create_poll_screen.dart';
 import 'screens/government/poll_list_screen.dart';
+import 'screens/government/GovernmentMainScreen.dart';
+import 'screens/government/government_delete_requests_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,11 +55,11 @@ class MyApp extends StatelessWidget {
         '/myAds': (context) => MyAdvertisementsScreen(),
         '/profile': (context) => AdvertiserProfileScreen(),
         '/reportOverview': (context) => const Placeholder(),
-        '/governmentHome': (context) => const GovernmentHomeScreen(),
-        '/government': (context) => const GovernmentFeedScreen(),
+        '/government': (context) => const GovernmentMainScreen(), 
         '/approveAds': (context) => const ApproveAdsScreen(),
         '/createPoll': (context) => const CreatePollScreen(),
         '/polls': (context) => const PollListScreen(),
+        '/deleteRequests': (context) => const GovernmentDeleteRequestsScreen(),
       },
     );
   }

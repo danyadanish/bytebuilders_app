@@ -95,11 +95,25 @@ class _AdvertiserHomeScreenState extends State<AdvertiserHomeScreen> {
     final name = userDoc.data()?['name'] ?? 'Unknown';
 
     if (_editingPostId != null) {
-      await FirebaseFirestore.instance.collection('posts').doc(_editingPostId).update({
-        'content': text,
-        'imageUrl': imageUrl,
-      });
-      _editingPostId = null;
+  final postRef = FirebaseFirestore.instance.collection('posts').doc(_editingPostId);
+  final postSnap = await postRef.get();
+  final postData = postSnap.data();
+
+  if (postData != null && postData['approvedByGovernment'] == true) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Editing government-approved posts is not allowed."),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  await postRef.update({
+    'content': text,
+    'imageUrl': imageUrl,
+  });
+  _editingPostId = null;
     } else {
       await FirebaseFirestore.instance.collection('posts').add({
         'authorId': user!.uid,
@@ -132,22 +146,45 @@ class _AdvertiserHomeScreenState extends State<AdvertiserHomeScreen> {
 
 
   Future<void> _deletePost(String postId) async {
-    final confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete Post"),
-        content: const Text("Are you sure you want to delete this post?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
-        ],
+  final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+  final postSnap = await postRef.get();
+  final postData = postSnap.data();
+
+  final confirm = await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Delete Post"),
+      content: const Text("Are you sure you want to delete this post?"),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
+      ],
+    ),
+  );
+
+  if (confirm != true) return;
+
+  if (postData != null && postData['approvedByGovernment'] == true) {
+    // Instead of deleting, send delete request
+    await FirebaseFirestore.instance.collection('deleteRequests').add({
+      'postId': postId,
+      'advertiserId': user!.uid,
+      'status': 'pending',
+      'timestamp': Timestamp.now(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Delete request sent to government."),
+        backgroundColor: Colors.orange,
       ),
     );
-
-    if (confirm == true) {
-      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
-    }
+  } else {
+    // Normal deletion
+    await postRef.delete();
   }
+}
+
 
   void _showNotYourPostMessage() {
     showDialog(
@@ -394,21 +431,54 @@ Widget build(BuildContext context) {
                           ),
                           confirmDismiss: (direction) async {
                             if (user!.uid != data['authorId']) {
-                              _showNotYourPostMessage();
-                              return false;
-                            }
-                            if (direction == DismissDirection.endToStart) {
-                              await _deletePost(postId);
-                              return false;
-                            } else if (direction == DismissDirection.startToEnd) {
-                              _openCreatePostDialog(
-                                existingContent: content,
-                                existingImageUrl: imageUrl,
-                                postId: postId,
-                              );
-                              return false;
-                            }
-                            return false;
+                          _showNotYourPostMessage();
+                          return false;
+                        }
+
+                        if (direction == DismissDirection.endToStart) {
+  // Delete attempt
+  if (data['approvedByGovernment'] == true) {
+    // Send delete request to government
+    await FirebaseFirestore.instance.collection('deleteRequests').add({
+      'postId': postId,
+      'advertiserId': user!.uid,
+      'status': 'pending',
+      'timestamp': Timestamp.now(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Delete request sent to government."),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  } else {
+    await _deletePost(postId);
+  }
+  return false;
+
+                        } else if (direction == DismissDirection.startToEnd) {
+      // Deny all edit attempts for government-approved posts
+      if (data['approvedByGovernment'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Editing government-approved posts is not allowed."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        _openCreatePostDialog(
+          existingContent: content,
+          existingImageUrl: imageUrl,
+          postId: postId,
+        );
+      }
+      return false;
+    }
+
+
+                        return false;
+
                           },
                           child: GestureDetector(
                             onTap: () => _incrementView(postId),

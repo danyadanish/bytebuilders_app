@@ -27,7 +27,7 @@ class AccountTypeSelectionScreen extends StatelessWidget {
               onPressed: () {
                 if (_codeController.text == governmentAccessCode) {
                   Navigator.pop(ctx);
-                  Navigator.pushNamed(context, '/governmentHome');
+                  Navigator.pushNamed(context, '/government');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

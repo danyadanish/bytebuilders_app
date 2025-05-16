@@ -456,7 +456,7 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                             child: GestureDetector(
                               onTap: () => _incrementView(postId),
                               child: Card(
-                                color: const Color.fromARGB(198, 85, 95, 111),
+                                color: const Color.fromARGB(255, 85, 153, 182).withOpacity(0.3),
                                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 child: Padding(

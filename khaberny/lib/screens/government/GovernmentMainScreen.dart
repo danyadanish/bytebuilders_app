@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'GovernmentHomeScreen.dart';
 import 'GovernmentFeedScreen.dart';
+import 'government_delete_requests_screen.dart';
 
 class GovernmentMainScreen extends StatefulWidget {
   const GovernmentMainScreen({super.key});
@@ -15,8 +16,8 @@ class _GovernmentMainScreenState extends State<GovernmentMainScreen> {
   final List<Widget> _screens = [
     const GovernmentHomeScreen(),
     const GovernmentFeedScreen(),
-    Placeholder(), // Chat
-    Placeholder(), // Profile
+    const GovernmentDeleteRequestsScreen(),
+    Placeholder(), // Chat Screen
   ];
 
   @override
@@ -33,6 +34,7 @@ class _GovernmentMainScreenState extends State<GovernmentMainScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Feed'),
+          BottomNavigationBarItem(icon: Icon(Icons.delete), label: 'delete Req'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
         ],
       ),

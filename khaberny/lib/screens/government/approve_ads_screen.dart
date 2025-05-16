@@ -298,6 +298,7 @@ class _ApproveAdsScreenState extends State<ApproveAdsScreen> {
     'dislikes': [],
     'viewers': [],
     'comments': [],
+    'approvedByGovernment': true,
   });
 
   // 2. Save notification in Firestore
