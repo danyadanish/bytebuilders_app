@@ -35,7 +35,7 @@ dependencies:
 
   #  Charts and Progress Indicators for Ad Report
   percent_indicator: ^4.2.2
-  fl_chart: ^0.64.0
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:
