@@ -21,6 +21,7 @@ import 'screens/government/poll_list_screen.dart';
 import 'screens/government/GovernmentMainScreen.dart';
 import 'screens/government/government_delete_requests_screen.dart';
 import 'screens/messaging/messageHomepage.dart';
+import 'screens/citizen/citizen_feed_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,9 +62,10 @@ class MyApp extends StatelessWidget {
         '/createPoll': (context) => const CreatePollScreen(),
         '/polls': (context) => const PollListScreen(),
         '/deleteRequests': (context) => const GovernmentDeleteRequestsScreen(),
-        '/feed': (context) => const GovernmentFeedScreen(),
+        '/governmentfeed': (context) => const GovernmentFeedScreen(),
         '/governmentHome': (context) => const GovernmentHomeScreen(),
         '/chat': (context) => const MessageHomepage(),
+        '/citizenFeed': (context) => const CitizenFeedScreen(),
       },
     );
   }
