@@ -20,12 +20,12 @@ class CitizenHomeScreen extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
-            _buildTile(context, Icons.announcement, "Feed", "/citizenFeed"),
+            _buildTile(context, Icons.announcement, "Announcements", "/citizen-feed"),
             _buildTile(context, Icons.how_to_vote, "Polls", "/polls"),
-            _buildTile(context, Icons.map_outlined, "Report Issue", "/report"),
+            _buildTile(
+                context, Icons.report_problem, "Report Issue", "/report"),
             _buildTile(context, Icons.phone_in_talk, "Emergency Numbers",
                 "/emergency"),
-            _buildTile(context, Icons.chat, "Messaging", '/chat')
           ],
         ),
       ),

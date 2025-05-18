@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 
 class AdvertiserHomeScreen extends StatefulWidget {
   const AdvertiserHomeScreen({super.key});
@@ -580,9 +583,70 @@ Widget build(BuildContext context) {
                                         const Center(
                                           child: Text("You already voted", style: TextStyle(color: Colors.greenAccent)),
                                         ),
-                                    ] else
-                                      Text(content,
-                                          style: const TextStyle(fontSize: 16, color: Colors.white)),
+                                    ] else if (data['type'] == 'problem') ...[
+  Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+  if (imageUrl.isNotEmpty)
+    Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(imageUrl, fit: BoxFit.cover),
+      ),
+    ),
+  const SizedBox(height: 8),
+  if (data['status'] != null)
+  Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "Status: ${data['status']}",
+        style: TextStyle(
+          color: data['status'] == 'Not Solved' ? Colors.redAccent : Colors.greenAccent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      if (data['solutionReason'] != null)
+        Text(
+          "Reason: ${data['solutionReason']}",
+          style: const TextStyle(color: Colors.white70),
+        ),
+    ],
+  )
+
+] else
+  Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+ if (data['latitude'] != null && data['longitude'] != null)
+  Container(
+    height: 200,
+    margin: const EdgeInsets.only(top: 10),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: FlutterMap(
+        options: MapOptions(
+          initialCenter: LatLng(data['latitude'], data['longitude']),
+          initialZoom: 15,
+          interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            subdomains: const ['a', 'b', 'c'],
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(data['latitude'], data['longitude']),
+                width: 40,
+                height: 40,
+                child: const Icon(Icons.location_pin, color: Colors.red, size: 30),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  ),
+
 
                                     if (imageUrl.isNotEmpty)
                                       ClipRRect(
