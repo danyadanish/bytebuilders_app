@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-
-
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class CitizenFeedScreen extends StatefulWidget {
   const CitizenFeedScreen({super.key});
@@ -23,6 +24,8 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
   final Map<String, bool> hasVoted = {};
   bool _showOnlyMyPosts = false;
   String? _editingPostId;
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
@@ -31,13 +34,46 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
     _commentControllers.forEach((_, c) => c.dispose());
     super.dispose();
   }
+
+  // Add image picker method
+  Future<void> _pickImage() async {
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  // Add image upload method
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
+
+    try {
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${user!.uid}';
+      final Reference storageRef =
+          FirebaseStorage.instance.ref().child('post_images/$fileName');
+      final UploadTask uploadTask = storageRef.putFile(_imageFile!);
+
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Update the _openCreatePostDialog method
   Future<void> _openCreatePostDialog({
     String? existingContent,
     String? existingImageUrl,
     String? postId,
   }) async {
     _postController.text = existingContent ?? '';
-    _imageUrlController.text = existingImageUrl ?? '';
+    _imageFile = null;
     _editingPostId = postId;
 
     showModalBottomSheet(
@@ -47,59 +83,81 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: MediaQuery.of(context).viewInsets,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _postController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: "What's on your mind?",
-                  hintStyle: TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.white10,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _postController,
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: "What's on your mind?",
+                    hintStyle: TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white10,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _imageUrlController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Paste image URL (optional)",
-                  hintStyle: TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.white10,
+                const SizedBox(height: 10),
+                if (_imageFile != null)
+                  Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Image.file(_imageFile!, height: 100),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => setState(() => _imageFile = null),
+                      ),
+                    ],
+                  ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.image),
+                  label: const Text("Add Image"),
+                  onPressed: () async {
+                    await _pickImage();
+                    setState(() {});
+                  },
                 ),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _submitPost,
-                child: Text(_editingPostId != null ? "Update Post" : "Post"),
-              )
-            ],
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _submitPost,
+                  child: Text(_editingPostId != null ? "Update Post" : "Post"),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  // Update the _submitPost method
   Future<void> _submitPost() async {
     final text = _postController.text.trim();
-    final imageUrl = _imageUrlController.text.trim();
     if (text.isEmpty) return;
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+    String? imageUrl;
+    if (_imageFile != null) {
+      imageUrl = await _uploadImage();
+    }
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
     final name = userDoc.data()?['name'] ?? 'Citizen';
 
     if (_editingPostId != null) {
-      await FirebaseFirestore.instance.collection('posts').doc(_editingPostId).update({
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(_editingPostId)
+          .update({
         'content': text,
-        'imageUrl': imageUrl,
+        'imageUrl': imageUrl ?? '',
       });
     } else {
       await FirebaseFirestore.instance.collection('posts').add({
@@ -107,15 +165,17 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
         'authorRole': 'citizen',
         'authorName': name,
         'content': text,
-        'imageUrl': imageUrl,
+        'imageUrl': imageUrl ?? '',
         'createdAt': Timestamp.now(),
         'likes': [],
         'dislikes': [],
         'comments': [],
         'viewers': [],
         'type': text.toLowerCase().startsWith('poll:') ? 'poll' : 'post',
-        'question': text.toLowerCase().startsWith('poll:') ? text.substring(5) : null,
-        'options': text.toLowerCase().startsWith('poll:') ? ['Yes', 'No'] : null,
+        'question':
+            text.toLowerCase().startsWith('poll:') ? text.substring(5) : null,
+        'options':
+            text.toLowerCase().startsWith('poll:') ? ['Yes', 'No'] : null,
         'votes': text.toLowerCase().startsWith('poll:') ? [0, 0] : null,
         'voters': text.toLowerCase().startsWith('poll:') ? [] : null,
         'allowMultipleVotes': false,
@@ -124,7 +184,7 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
 
     _editingPostId = null;
     _postController.clear();
-    _imageUrlController.clear();
+    _imageFile = null;
     Navigator.pop(context);
   }
 
@@ -135,8 +195,12 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
         title: const Text("Delete Post"),
         content: const Text("Are you sure you want to delete this post?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Delete")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text("Delete")),
         ],
       ),
     );
@@ -144,10 +208,14 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
       await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
     }
   }
+
   Future<void> _addComment(String postId, String commentText) async {
     if (commentText.trim().isEmpty) return;
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
     final name = userDoc.data()?['name'] ?? 'Citizen';
 
     final comment = {
@@ -175,7 +243,8 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Comments", style: TextStyle(color: Colors.white, fontSize: 18)),
+            const Text("Comments",
+                style: TextStyle(color: Colors.white, fontSize: 18)),
             const Divider(color: Colors.white24),
             SizedBox(
               height: 300,
@@ -188,8 +257,10 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(comment['username'] ?? 'Unknown', style: const TextStyle(color: Colors.white70)),
-                        Text(comment['text'] ?? '', style: const TextStyle(color: Colors.white)),
+                        Text(comment['username'] ?? 'Unknown',
+                            style: const TextStyle(color: Colors.white70)),
+                        Text(comment['text'] ?? '',
+                            style: const TextStyle(color: Colors.white)),
                       ],
                     ),
                   );
@@ -238,7 +309,9 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
     final data = snapshot.data() as Map<String, dynamic>?;
     final viewers = List<String>.from(data?['viewers'] ?? []);
     if (!viewers.contains(user!.uid)) {
-      await ref.update({'viewers': FieldValue.arrayUnion([user!.uid])});
+      await ref.update({
+        'viewers': FieldValue.arrayUnion([user!.uid])
+      });
     }
   }
 
@@ -247,8 +320,10 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF1B203D),
-        title: const Text("Access Denied", style: TextStyle(color: Colors.white)),
-        content: const Text("You cannot delete or edit this post because it's not yours.",
+        title:
+            const Text("Access Denied", style: TextStyle(color: Colors.white)),
+        content: const Text(
+            "You cannot delete or edit this post because it's not yours.",
             style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
@@ -263,7 +338,9 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
   Future<void> _toggleLike(String postId, List likes, List dislikes) async {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     if (likes.contains(user!.uid)) {
-      await ref.update({'likes': FieldValue.arrayRemove([user!.uid])});
+      await ref.update({
+        'likes': FieldValue.arrayRemove([user!.uid])
+      });
     } else {
       await ref.update({
         'likes': FieldValue.arrayUnion([user!.uid]),
@@ -275,7 +352,9 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
   Future<void> _toggleDislike(String postId, List likes, List dislikes) async {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     if (dislikes.contains(user!.uid)) {
-      await ref.update({'dislikes': FieldValue.arrayRemove([user!.uid])});
+      await ref.update({
+        'dislikes': FieldValue.arrayRemove([user!.uid])
+      });
     } else {
       await ref.update({
         'dislikes': FieldValue.arrayUnion([user!.uid]),
@@ -283,6 +362,7 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -310,8 +390,10 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
             ),
             actions: [
               IconButton(
-                icon: Icon(_showOnlyMyPosts ? Icons.list : Icons.person, color: Colors.grey),
-                onPressed: () => setState(() => _showOnlyMyPosts = !_showOnlyMyPosts),
+                icon: Icon(_showOnlyMyPosts ? Icons.list : Icons.person,
+                    color: Colors.grey),
+                onPressed: () =>
+                    setState(() => _showOnlyMyPosts = !_showOnlyMyPosts),
               )
             ],
           ),
@@ -323,7 +405,8 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                   child: InkWell(
                     onTap: () => _openCreatePostDialog(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: Colors.white12,
                         borderRadius: BorderRadius.circular(12),
@@ -332,7 +415,8 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                         children: [
                           Icon(Icons.edit, color: Colors.white70),
                           SizedBox(width: 10),
-                          Text("Hello, What’s on your mind ?", style: TextStyle(color: Colors.white70)),
+                          Text("Hello, What’s on your mind ?",
+                              style: TextStyle(color: Colors.white70)),
                         ],
                       ),
                     ),
@@ -346,11 +430,17 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                      if (!snapshot.hasData)
+                        return const Center(child: CircularProgressIndicator());
 
                       final posts = snapshot.data!.docs;
                       final filtered = _showOnlyMyPosts
-                          ? posts.where((doc) => (doc.data() as Map<String, dynamic>)['authorId'] == user?.uid).toList()
+                          ? posts
+                              .where((doc) =>
+                                  (doc.data()
+                                      as Map<String, dynamic>)['authorId'] ==
+                                  user?.uid)
+                              .toList()
                           : posts;
 
                       return ListView.builder(
@@ -360,14 +450,21 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                           final data = post.data() as Map<String, dynamic>;
                           final postId = post.id;
                           final content = data['content'] ?? '';
-                          final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                          final createdAt =
+                              (data['createdAt'] as Timestamp?)?.toDate();
                           final likes = List<String>.from(data['likes'] ?? []);
-                          final dislikes = List<String>.from(data['dislikes'] ?? []);
-                          final viewers = List<String>.from(data['viewers'] ?? []);
+                          final dislikes =
+                              List<String>.from(data['dislikes'] ?? []);
+                          final viewers =
+                              List<String>.from(data['viewers'] ?? []);
                           final comments = List.from(data['comments'] ?? []);
                           final imageUrl = data['imageUrl'] ?? '';
-                          final commentController = _commentControllers.putIfAbsent(postId, () => TextEditingController());
-                          final userVoted = List<String>.from(data['voters'] ?? []).contains(user?.uid);
+                          final commentController =
+                              _commentControllers.putIfAbsent(
+                                  postId, () => TextEditingController());
+                          final userVoted =
+                              List<String>.from(data['voters'] ?? [])
+                                  .contains(user?.uid);
                           final username = data['authorName'] ?? 'Citizen';
 
                           return Dismissible(
@@ -376,13 +473,15 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                               color: Colors.blueAccent,
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.only(left: 20),
-                              child: const Icon(Icons.edit, color: Colors.white),
+                              child:
+                                  const Icon(Icons.edit, color: Colors.white),
                             ),
                             secondaryBackground: Container(
                               color: Colors.red,
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: 20),
-                              child: const Icon(Icons.delete, color: Colors.white),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
                             ),
                             confirmDismiss: (direction) async {
                               if (user!.uid != data['authorId']) {
@@ -391,7 +490,8 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                               }
                               if (direction == DismissDirection.endToStart) {
                                 await _deletePost(postId);
-                              } else if (direction == DismissDirection.startToEnd) {
+                              } else if (direction ==
+                                  DismissDirection.startToEnd) {
                                 _openCreatePostDialog(
                                   existingContent: content,
                                   existingImageUrl: imageUrl,
@@ -404,47 +504,78 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                               onTap: () => _incrementView(postId),
                               child: Card(
                                 color: const Color.fromARGB(198, 85, 95, 111),
-                                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          const CircleAvatar(radius: 16, backgroundImage: AssetImage('assets/avatar.png')),
+                                          const CircleAvatar(
+                                              radius: 16,
+                                              backgroundImage: AssetImage(
+                                                  'assets/avatar.png')),
                                           const SizedBox(width: 8),
-                                          Text(username, style: const TextStyle(color: Colors.white)),
+                                          Text(username,
+                                              style: const TextStyle(
+                                                  color: Colors.white)),
                                         ],
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
                                         createdAt != null
-                                            ? createdAt.toLocal().toString().split(' ')[0]
+                                            ? createdAt
+                                                .toLocal()
+                                                .toString()
+                                                .split(' ')[0]
                                             : "Date Unknown",
-                                        style: const TextStyle(fontSize: 12, color: Colors.white60),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white60),
                                       ),
                                       const SizedBox(height: 10),
                                       if (data['type'] == 'poll') ...[
-                                        Text(data['question'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                        Text(data['question'] ?? '',
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
                                         const SizedBox(height: 8),
-                                        ...List.generate(List<String>.from(data['options'] ?? []).length, (i) {
-                                          final options = List<String>.from(data['options']);
-                                          final votes = List<int>.from(data['votes']);
-                                          final totalVotes = votes.fold(0, (a, b) => a + b);
-                                          final allowMultiple = data['allowMultipleVotes'] ?? false;
-                                          final percent = totalVotes == 0 ? 0 : ((votes[i] / totalVotes) * 100).round();
+                                        ...List.generate(
+                                            List<String>.from(
+                                                    data['options'] ?? [])
+                                                .length, (i) {
+                                          final options = List<String>.from(
+                                              data['options']);
+                                          final votes =
+                                              List<int>.from(data['votes']);
+                                          final totalVotes =
+                                              votes.fold(0, (a, b) => a + b);
+                                          final allowMultiple =
+                                              data['allowMultipleVotes'] ??
+                                                  false;
+                                          final percent = totalVotes == 0
+                                              ? 0
+                                              : ((votes[i] / totalVotes) * 100)
+                                                  .round();
                                           final isSelected = allowMultiple
-                                              ? (multiSelections[postId] ?? {}).contains(i)
+                                              ? (multiSelections[postId] ?? {})
+                                                  .contains(i)
                                               : singleSelections[postId] == i;
 
                                           return Container(
-                                            margin: const EdgeInsets.symmetric(vertical: 4),
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                            margin: const EdgeInsets.symmetric(
+                                                vertical: 4),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 10),
                                             decoration: BoxDecoration(
                                               color: Colors.white10,
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                             child: Row(
                                               children: [
@@ -454,29 +585,54 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                                                           value: isSelected,
                                                           onChanged: (val) {
                                                             setState(() {
-                                                              multiSelections.putIfAbsent(postId, () => <int>{});
+                                                              multiSelections
+                                                                  .putIfAbsent(
+                                                                      postId,
+                                                                      () =>
+                                                                          <int>{});
                                                               if (val == true) {
-                                                                multiSelections[postId]!.add(i);
+                                                                multiSelections[
+                                                                        postId]!
+                                                                    .add(i);
                                                               } else {
-                                                                multiSelections[postId]!.remove(i);
+                                                                multiSelections[
+                                                                        postId]!
+                                                                    .remove(i);
                                                               }
                                                             });
                                                           },
-                                                          activeColor: Colors.greenAccent,
+                                                          activeColor: Colors
+                                                              .greenAccent,
                                                         )
                                                       : Radio(
                                                           value: i,
-                                                          groupValue: singleSelections[postId],
-                                                          onChanged: (val) => setState(() => singleSelections[postId] = i),
-                                                          activeColor: Colors.greenAccent,
+                                                          groupValue:
+                                                              singleSelections[
+                                                                  postId],
+                                                          onChanged: (val) =>
+                                                              setState(() =>
+                                                                  singleSelections[
+                                                                      postId] = i),
+                                                          activeColor: Colors
+                                                              .greenAccent,
                                                         )
                                                 else
-                                                  const Icon(Icons.check_circle, color: Colors.greenAccent),
+                                                  const Icon(Icons.check_circle,
+                                                      color:
+                                                          Colors.greenAccent),
                                                 const SizedBox(width: 6),
-                                                Expanded(child: Text(options[i], style: const TextStyle(color: Colors.white))),
-                                                Text("$percent%", style: const TextStyle(color: Colors.white54)),
+                                                Expanded(
+                                                    child: Text(options[i],
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white))),
+                                                Text("$percent%",
+                                                    style: const TextStyle(
+                                                        color: Colors.white54)),
                                                 const SizedBox(width: 8),
-                                                Text("${votes[i]}", style: const TextStyle(color: Colors.white38)),
+                                                Text("${votes[i]}",
+                                                    style: const TextStyle(
+                                                        color: Colors.white38)),
                                               ],
                                             ),
                                           );
@@ -484,149 +640,213 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
                                         if (!userVoted)
                                           Center(
                                             child: ElevatedButton(
-                                              onPressed: () => _submitVote(postId, data),
-                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                                              onPressed: () =>
+                                                  _submitVote(postId, data),
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.teal),
                                               child: const Text("Submit Vote"),
                                             ),
                                           )
                                         else
                                           const Center(
-                                            child: Text("You already voted", style: TextStyle(color: Colors.greenAccent)),
+                                            child: Text("You already voted",
+                                                style: TextStyle(
+                                                    color: Colors.greenAccent)),
                                           ),
                                       ] else if (data['type'] == 'problem') ...[
-                                            Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+                                        Text(content,
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white)),
 
-                                            if (imageUrl.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 8.0),
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: Image.network(imageUrl, fit: BoxFit.cover),
+                                        if (imageUrl.isNotEmpty)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 8.0),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.network(imageUrl,
+                                                  fit: BoxFit.cover),
+                                            ),
+                                          ),
+
+                                        if (data['latitude'] != null &&
+                                            data['longitude'] != null)
+                                          Container(
+                                            height: 200,
+                                            margin:
+                                                const EdgeInsets.only(top: 10),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: FlutterMap(
+                                                options: MapOptions(
+                                                  initialCenter: LatLng(
+                                                      data['latitude'],
+                                                      data['longitude']),
+                                                  initialZoom: 15,
+                                                  interactionOptions:
+                                                      const InteractionOptions(
+                                                          flags: InteractiveFlag
+                                                              .none),
                                                 ),
-                                              ),
-
-                                            if (data['latitude'] != null && data['longitude'] != null)
-                                              Container(
-                                                height: 200,
-                                                margin: const EdgeInsets.only(top: 10),
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  child: FlutterMap(
-                                                    options: MapOptions(
-                                                      initialCenter: LatLng(data['latitude'], data['longitude']),
-                                                      initialZoom: 15,
-                                                      interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
-                                                    ),
-                                                    children: [
-                                                      TileLayer(
-                                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                                        subdomains: const ['a', 'b', 'c'],
-                                                      ),
-                                                      MarkerLayer(
-                                                        markers: [
-                                                          Marker(
-                                                            point: LatLng(data['latitude'], data['longitude']),
-                                                            width: 40,
-                                                            height: 40,
-                                                            child: const Icon(Icons.location_on, color: Colors.red, size: 30),
-                                                          ),
-                                                        ],
+                                                children: [
+                                                  TileLayer(
+                                                    urlTemplate:
+                                                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                    subdomains: const [
+                                                      'a',
+                                                      'b',
+                                                      'c'
+                                                    ],
+                                                  ),
+                                                  MarkerLayer(
+                                                    markers: [
+                                                      Marker(
+                                                        point: LatLng(
+                                                            data['latitude'],
+                                                            data['longitude']),
+                                                        width: 40,
+                                                        height: 40,
+                                                        child: const Icon(
+                                                            Icons.location_on,
+                                                            color: Colors.red,
+                                                            size: 30),
                                                       ),
                                                     ],
                                                   ),
-                                                ),
+                                                ],
                                               ),
+                                            ),
+                                          ),
 
-                                            // ✅ Status block — shows only if government added status
-                                            if (data['status'] != null)
-                                              Container(
-                                                margin: const EdgeInsets.only(top: 8),
-                                                padding: const EdgeInsets.all(10),
-                                                decoration: BoxDecoration(
-                                                  color: data['status'] == 'Solved'
-                                                      ? Colors.green.withOpacity(0.2)
-                                                      : Colors.red.withOpacity(0.2),
-                                                  borderRadius: BorderRadius.circular(8),
+                                        // ✅ Status block — shows only if government added status
+                                        if (data['status'] != null)
+                                          Container(
+                                            margin:
+                                                const EdgeInsets.only(top: 8),
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: data['status'] == 'Solved'
+                                                  ? Colors.green
+                                                      .withOpacity(0.2)
+                                                  : Colors.red.withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "Status: ${data['status']}",
+                                                  style: TextStyle(
+                                                    color: data['status'] ==
+                                                            'Solved'
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "Status: ${data['status']}",
-                                                      style: TextStyle(
-                                                        color: data['status'] == 'Solved' ? Colors.green : Colors.red,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    if (data['solutionReason'] != null && data['solutionReason'].toString().isNotEmpty)
-                                                      Text(
-                                                        "Reason: ${data['solutionReason']}",
-                                                        style: const TextStyle(color: Colors.white),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-
+                                                if (data['solutionReason'] !=
+                                                        null &&
+                                                    data['solutionReason']
+                                                        .toString()
+                                                        .isNotEmpty)
+                                                  Text(
+                                                    "Reason: ${data['solutionReason']}",
+                                                    style: const TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
                                       ] else ...[
-                                        Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+                                        Text(content,
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white)),
                                         if (imageUrl.isNotEmpty)
                                           Padding(
-                                            padding: const EdgeInsets.only(top: 8.0),
+                                            padding:
+                                                const EdgeInsets.only(top: 8.0),
                                             child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Image.network(imageUrl, fit: BoxFit.cover),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.network(imageUrl,
+                                                  fit: BoxFit.cover),
                                             ),
                                           ),
                                       ],
-
                                       const SizedBox(height: 10),
                                       Row(
                                         children: [
                                           IconButton(
                                             icon: Icon(
-                                              likes.contains(user!.uid) ? Icons.favorite : Icons.favorite_border,
+                                              likes.contains(user!.uid)
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
                                               color: Colors.red,
                                             ),
-                                            onPressed: () => _toggleLike(postId, likes, dislikes),
+                                            onPressed: () => _toggleLike(
+                                                postId, likes, dislikes),
                                           ),
-                                          Text('${likes.length}', style: const TextStyle(color: Colors.white70)),
+                                          Text('${likes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white70)),
                                           const SizedBox(width: 12),
                                           IconButton(
-                                            icon: const Icon(Icons.thumb_down, color: Colors.white38),
-                                            onPressed: () => _toggleDislike(postId, likes, dislikes),
+                                            icon: const Icon(Icons.thumb_down,
+                                                color: Colors.white38),
+                                            onPressed: () => _toggleDislike(
+                                                postId, likes, dislikes),
                                           ),
-                                          Text('${dislikes.length}', style: const TextStyle(color: Colors.white38)),
+                                          Text('${dislikes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white38)),
                                           const Spacer(),
-                                          const Icon(Icons.remove_red_eye, color: Colors.white38, size: 20),
+                                          const Icon(Icons.remove_red_eye,
+                                              color: Colors.white38, size: 20),
                                           const SizedBox(width: 4),
-                                          Text('${viewers.length}', style: const TextStyle(color: Colors.white38)),
+                                          Text('${viewers.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white38)),
                                         ],
                                       ),
                                       TextButton(
-                                        onPressed: () => _showCommentsDialog(comments),
-                                        child: const Text("View Comments", style: TextStyle(color: Colors.white70)),
+                                        onPressed: () =>
+                                            _showCommentsDialog(comments),
+                                        child: const Text("View Comments",
+                                            style: TextStyle(
+                                                color: Colors.white70)),
                                       ),
                                       Row(
                                         children: [
                                           Expanded(
                                             child: TextField(
                                               controller: commentController,
-                                              style: const TextStyle(color: Colors.white),
+                                              style: const TextStyle(
+                                                  color: Colors.white),
                                               decoration: InputDecoration(
                                                 hintText: "Write a comment",
-                                                hintStyle: const TextStyle(color: Colors.white70),
+                                                hintStyle: const TextStyle(
+                                                    color: Colors.white70),
                                                 filled: true,
                                                 fillColor: Colors.white10,
                                                 border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                   borderSide: BorderSide.none,
                                                 ),
                                               ),
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(Icons.send, color: Colors.white),
-                                            onPressed: () => _addComment(postId, commentController.text),
+                                            icon: const Icon(Icons.send,
+                                                color: Colors.white),
+                                            onPressed: () => _addComment(
+                                                postId, commentController.text),
                                           ),
                                         ],
                                       ),
