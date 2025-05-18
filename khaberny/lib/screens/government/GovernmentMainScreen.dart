@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:khaberny/screens/messaging/messageHomepage.dart';
 import 'GovernmentHomeScreen.dart';
 import 'GovernmentFeedScreen.dart';
 import 'government_delete_requests_screen.dart';
@@ -22,7 +21,7 @@ class _GovernmentMainScreenState extends State<GovernmentMainScreen> {
       const GovernmentHomeScreen(),
       const GovernmentFeedScreen(),
       const GovernmentDeleteRequestsScreen(),
-      const MessageHomepage(),
+      const Placeholder(),
     ];
   }
 
