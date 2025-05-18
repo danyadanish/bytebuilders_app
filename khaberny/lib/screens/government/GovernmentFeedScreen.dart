@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import './poll_detail_screen.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 class GovernmentFeedScreen extends StatefulWidget {
   const GovernmentFeedScreen({super.key});
 
@@ -489,8 +491,93 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                                           },
                                           child: PollCard(postId: postId, data: data),
                                         )
-                                      else
+                                      else if (data['type'] == 'problem') ...[
+  Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+  if (imageUrl.isNotEmpty)
+    Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(imageUrl, fit: BoxFit.cover),
+      ),
+    ),
+  const SizedBox(height: 8),
+  if (data['status'] != null)
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Status: ${data['status']}",
+          style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold),
+        ),
+        if (data['solutionReason'] != null)
+          Text(
+            "Reason: ${data['solutionReason']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+      ],
+    )
+  else
+    Row(
+      children: [
+        ElevatedButton.icon(
+          icon: const Icon(Icons.check),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+          label: const Text("Mark Solved"),
+          onPressed: () async {
+            await FirebaseFirestore.instance.collection('posts').doc(postId).update({
+              'status': 'Solved',
+              'solutionReason': 'Fixed by government',
+            });
+          },
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.close),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          label: const Text("Not Solved"),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (_) {
+                final reasonController = TextEditingController();
+                return AlertDialog(
+                  backgroundColor: const Color(0xFF1B203D),
+                  title: const Text("Reason", style: TextStyle(color: Colors.white)),
+                  content: TextField(
+                    controller: reasonController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: "Enter reason",
+                      hintStyle: TextStyle(color: Colors.white38),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await FirebaseFirestore.instance.collection('posts').doc(postId).update({
+                          'status': 'Not Solved',
+                          'solutionReason': reasonController.text.trim(),
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: const Text("Submit", style: TextStyle(color: Colors.redAccent)),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
+      ],
+    ),
+]                                      else
                                         Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
+
 
                                       const SizedBox(height: 10),
                                       if (imageUrl.isNotEmpty)
@@ -498,6 +585,38 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                                           borderRadius: BorderRadius.circular(8),
                                           child: Image.network(imageUrl, fit: BoxFit.cover),
                                         ),
+                                        if (data['latitude'] != null && data['longitude'] != null)
+  Container(
+    height: 200,
+    margin: const EdgeInsets.only(top: 10),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: FlutterMap(
+        options: MapOptions(
+          initialCenter: LatLng(data['latitude'], data['longitude']),
+          initialZoom: 15,
+          interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            subdomains: const ['a', 'b', 'c'],
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(data['latitude'], data['longitude']),
+                width: 40,
+                height: 40,
+                child: const Icon(Icons.location_pin, color: Colors.red, size: 30),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  ),
+
                                       const SizedBox(height: 10),
                                       Row(
                                         children: [
