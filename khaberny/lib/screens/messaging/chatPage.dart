@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../notificationservice.dart';
+import '../../notifications.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverId;
@@ -20,8 +25,24 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
-  void sendMessage() async {
+  @override
+  void initState() {
+    super.initState();
+    _setupMessaging();
+  }
+
+  Future<void> _setupMessaging() async {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+  Future<void> sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
     final String currentUserId = _auth.currentUser!.uid;
@@ -29,7 +50,7 @@ class _ChatPageState extends State<ChatPage> {
     _messageController.clear();
 
     try {
-      // First, get or create the chat document
+      // Get or create chat document
       final chatQuery = await _firestore
           .collection('chats')
           .where('participants', arrayContains: currentUserId)
@@ -39,7 +60,6 @@ class _ChatPageState extends State<ChatPage> {
       String chatDocId;
 
       if (chatQuery.docs.isEmpty) {
-        // Create new chat if it doesn't exist
         final newChatDoc = await _firestore.collection('chats').add({
           'participants': [currentUserId, widget.receiverId],
           'participantId': widget.receiverId,
@@ -50,14 +70,13 @@ class _ChatPageState extends State<ChatPage> {
         chatDocId = newChatDoc.id;
       } else {
         chatDocId = chatQuery.docs.first.id;
-        // Update existing chat
         await chatQuery.docs.first.reference.update({
           'lastMessage': message,
           'lastMessageTime': DateTime.now().toIso8601String(),
         });
       }
 
-      // Add the message to messages subcollection
+      // Add message to subcollection
       await _firestore
           .collection('chats')
           .doc(chatDocId)
@@ -68,11 +87,84 @@ class _ChatPageState extends State<ChatPage> {
         'content': message,
         'timestamp': DateTime.now().toIso8601String(),
       });
+
+      // Send notification
+      final userDoc =
+          await _firestore.collection('users').doc(currentUserId).get();
+      final senderName = userDoc.data()?['name'] ?? 'Unknown User';
+
+      final receiverDoc =
+          await _firestore.collection('users').doc(widget.receiverId).get();
+      final fcmToken = receiverDoc.data()?['fcmToken'];
+
+      if (fcmToken != null) {
+        await _notificationService.addNotification(Notifications(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: widget.receiverId,
+          title: 'New message from $senderName',
+          status: 'unread',
+          timestamp: DateTime.now(),
+          isRead: false,
+          type: 'message',
+          sourceType: 'user',
+          sourceId: currentUserId,
+          sourceName: senderName,
+          actionType: 'open_chat',
+          reason: null,
+        ));
+
+        await _sendFCMNotification(
+          token: fcmToken,
+          title: 'New Message',
+          body: '$senderName: $message',
+          data: {
+            'type': 'message',
+            'chatId': chatDocId,
+            'senderId': currentUserId,
+            'senderName': senderName,
+          },
+        );
+      }
     } catch (e) {
       print('Error sending message: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message. Please try again.')),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message. Please try again.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendFCMNotification({
+    required String token,
+    required String title,
+    required String body,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=YOUR_FCM_SERVER_KEY', // Replace with your FCM server key
+        },
+        body: jsonEncode({
+          'to': token,
+          'notification': {
+            'title': title,
+            'body': body,
+            'sound': 'default',
+          },
+          'data': data,
+        }),
       );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to send FCM notification');
+      }
+    } catch (e) {
+      print('Error sending FCM notification: $e');
     }
   }
 
@@ -90,11 +182,11 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('chats')
-                  .where('participants', arrayContains: currentUserId)
-                  .where('participantId', isEqualTo: widget.receiverId)
-                  .snapshots(),
+              stream: _firestore.collection('chats').where('participants',
+                  arrayContainsAny: [
+                    currentUserId,
+                    widget.receiverId
+                  ]).snapshots(),
               builder: (context, chatSnapshot) {
                 if (chatSnapshot.hasError) {
                   return Center(child: Text('Error: ${chatSnapshot.error}'));
@@ -104,8 +196,16 @@ class _ChatPageState extends State<ChatPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // Even if there are no chats yet, we should still show an empty state
-                if (chatSnapshot.data!.docs.isEmpty) {
+                // Find the correct chat document
+                final chatDocs = chatSnapshot.data!.docs.where(
+                  (doc) {
+                    final participants = List<String>.from(doc['participants']);
+                    return participants.contains(currentUserId) &&
+                        participants.contains(widget.receiverId);
+                  },
+                ).toList();
+
+                if (chatDocs.isEmpty) {
                   return const Center(
                     child: Text(
                       'No messages yet. Start a conversation!',
@@ -113,13 +213,12 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   );
                 }
-
-                final chatDocId = chatSnapshot.data!.docs.first.id;
+                final chatDoc = chatDocs.first;
 
                 return StreamBuilder<QuerySnapshot>(
                   stream: _firestore
                       .collection('chats')
-                      .doc(chatDocId)
+                      .doc(chatDoc.id)
                       .collection('messages')
                       .orderBy('timestamp', descending: true)
                       .snapshots(),

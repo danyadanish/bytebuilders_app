@@ -177,7 +177,16 @@ class _MessageHomepageState extends State<MessageHomepage> {
                         ? DateTime.parse(chat['lastMessageTime'])
                         : DateTime.now();
 
-                    // Filter based on search query
+                    // Get the correct participant's name
+                    final currentUserId = _auth.currentUser!.uid;
+                    final participants =
+                        List<String>.from(chat['participants'] ?? []);
+                    final otherParticipantId = participants.firstWhere(
+                      (id) => id != currentUserId,
+                      orElse: () => '',
+                    );
+
+                    // Filter based on search query using the other participant's name
                     if (_searchQuery.isNotEmpty &&
                         !chat['participantName']
                             .toString()
@@ -194,9 +203,23 @@ class _MessageHomepageState extends State<MessageHomepage> {
                           backgroundColor: Color(0xFF6C91BF),
                           child: Icon(Icons.person, color: Color(0xFFFEFCFB)),
                         ),
-                        title: Text(
-                          chat['participantName'] ?? 'Unknown User',
-                          style: TextStyle(color: Color(0xFFFEFCFB)),
+                        title: FutureBuilder<DocumentSnapshot>(
+                          future: _firestore
+                              .collection('users')
+                              .doc(otherParticipantId)
+                              .get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final userData = snapshot.data!.data()
+                                  as Map<String, dynamic>?;
+                              return Text(
+                                userData?['name'] ?? 'Unknown User',
+                                style: TextStyle(color: Color(0xFFFEFCFB)),
+                              );
+                            }
+                            return Text('Loading...',
+                                style: TextStyle(color: Color(0xFFFEFCFB)));
+                          },
                         ),
                         subtitle: Text(
                           lastMessage,
@@ -213,7 +236,7 @@ class _MessageHomepageState extends State<MessageHomepage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ChatPage(
-                                receiverId: chat['participantId'],
+                                receiverId: otherParticipantId,
                                 receiverName: chat['participantName'],
                               ),
                             ),
