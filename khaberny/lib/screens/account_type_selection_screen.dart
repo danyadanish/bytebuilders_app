@@ -6,7 +6,7 @@ class AccountTypeSelectionScreen extends StatelessWidget {
   static const String governmentAccessCode = "1234";
 
   void _showGovernmentCodeDialog(BuildContext context) {
-    final TextEditingController _codeController = TextEditingController();
+    final TextEditingController codeController = TextEditingController();
 
     showDialog(
       context: context,
@@ -14,7 +14,7 @@ class AccountTypeSelectionScreen extends StatelessWidget {
         return AlertDialog(
           title: const Text("Enter Government Access Code"),
           content: TextField(
-            controller: _codeController,
+            controller: codeController,
             obscureText: true,
             decoration: const InputDecoration(hintText: "Enter code"),
           ),
@@ -25,7 +25,7 @@ class AccountTypeSelectionScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_codeController.text == governmentAccessCode) {
+                if (codeController.text == governmentAccessCode) {
                   Navigator.pop(ctx);
                   Navigator.pushNamed(context, '/government');
                 } else {

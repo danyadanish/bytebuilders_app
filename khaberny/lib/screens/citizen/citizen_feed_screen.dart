@@ -235,7 +235,7 @@ class _CitizenFeedScreenState extends State<CitizenFeedScreen> {
   Future<void> _incrementView(String postId) async {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     final snapshot = await ref.get();
-    final data = snapshot.data() as Map<String, dynamic>?;
+    final data = snapshot.data();
     final viewers = List<String>.from(data?['viewers'] ?? []);
     if (!viewers.contains(user!.uid)) {
       await ref.update({'viewers': FieldValue.arrayUnion([user!.uid])});

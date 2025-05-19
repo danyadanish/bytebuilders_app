@@ -13,8 +13,6 @@ import 'screens/advertiser/advertiser_main_screen.dart';
 import 'screens/advertiser/my_advertisements_screen.dart';
 import 'screens/advertiser/add_advertisement_screen.dart';
 import 'screens/advertiser/advertiser_profile_screen.dart';
-import 'screens/government/GovernmentHomeScreen.dart';
-import 'screens/government/GovernmentFeedScreen.dart';
 import 'screens/government/approve_ads_screen.dart';
 import 'screens/government/create_poll_screen.dart';
 import 'screens/government/poll_list_screen.dart';
@@ -22,7 +20,6 @@ import 'screens/government/GovernmentMainScreen.dart';
 import 'screens/government/government_delete_requests_screen.dart';
 import 'screens/citizen/citizen_feed_screen.dart';
 import 'screens/citizen/citizen_report_problem_screen.dart';
-import 'screens/government/government_problem_reports_screen.dart';
 
 
 void main() async {
