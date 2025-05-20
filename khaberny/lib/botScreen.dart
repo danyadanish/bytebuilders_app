@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'geminiService.dart';
 
 class ChatPage extends StatefulWidget {
+  const ChatPage({super.key});
+
   @override
   _ChatPageState createState() => _ChatPageState();
 }
@@ -10,7 +12,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final GeminiService _geminiService = GeminiService();
 
-  List<Map<String, String>> _messages = [];
+  final List<Map<String, String>> _messages = [];
 
   void _sendMessage() async {
     String userMessage = _controller.text.trim();
