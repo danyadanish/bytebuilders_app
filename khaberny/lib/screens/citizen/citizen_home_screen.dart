@@ -22,13 +22,12 @@ class CitizenHomeScreen extends StatelessWidget {
           children: [
             _buildTile(
                 context, Icons.announcement, "Announcements", "/citizen-feed"),
-            _buildTile(context, Icons.how_to_vote, "Polls", "/polls"),
             _buildTile(context, Icons.map, "Map Reporting", "/report"),
             _buildTile(context, Icons.phone_in_talk, "Emergency Numbers",
                 "/emergency"),
             _buildTile(context, Icons.message, "Messaging", '/message'),
-            _buildTile(
-                context, Icons.notifications, "Notifications", '/notification'),
+            _buildTile(context, Icons.notification_important, "Notifications",
+                '/notifications'),
           ],
         ),
       ),

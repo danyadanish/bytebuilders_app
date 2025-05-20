@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 // Screens
 import 'screens/splash_screen.dart';
@@ -20,14 +21,31 @@ import 'screens/government/GovernmentMainScreen.dart';
 import 'screens/government/government_delete_requests_screen.dart';
 import 'screens/citizen/citizen_feed_screen.dart';
 import 'screens/citizen/citizen_report_problem_screen.dart';
-import 'screens/government/government_problem_reports_screen.dart';
 import 'screens/messaging/messageHomepage.dart';
-import 'screens/notification_screen.dart';
+import 'screens/citizen/emergency_numbers_screen.dart';
+import 'screens/notifications/notification_screen.dart';
+
+class FirebaseMessagingService {
+  Future<void> initialize() async {
+    // Initialize Firebase Messaging here
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // Initialize Firebase Messaging
+  final messagingService = FirebaseMessagingService();
+  await messagingService.initialize();
+
+  // Handle background messages
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyApp());
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('Handling a background message: ${message.messageId}');
 }
 
 class MyApp extends StatelessWidget {
@@ -66,8 +84,8 @@ class MyApp extends StatelessWidget {
         '/citizen-feed': (context) => const CitizenFeedScreen(),
         '/report': (context) => const ReportProblemScreen(),
         '/message': (context) => const MessageHomepage(),
-        '/notification': (context) =>
-            const NotificationScreen(userId: 'userId'),
+        '/emergency': (context) => const EmergencyNumbersScreen(),
+        '/notifications': (context) => const NotificationScreen(),
       },
     );
   }
