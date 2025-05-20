@@ -13,7 +13,8 @@ class PollListScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text("Available Polls", style: TextStyle(color: Colors.white)),
+        title: const Text("Available Polls",
+            style: TextStyle(color: Colors.white)),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -39,7 +40,8 @@ class PollListScreen extends StatelessWidget {
 
           if (polls.isEmpty) {
             return const Center(
-              child: Text("No polls available.", style: TextStyle(color: Colors.white70)),
+              child: Text("No polls available.",
+                  style: TextStyle(color: Colors.white70)),
             );
           }
 
@@ -54,7 +56,8 @@ class PollListScreen extends StatelessWidget {
               return Card(
                 color: Colors.white10,
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   title: Text(
                     poll['question'] ?? 'Untitled',

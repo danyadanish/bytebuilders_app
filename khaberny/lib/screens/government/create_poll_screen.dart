@@ -84,81 +84,101 @@ class _CreatePollScreenState extends State<CreatePollScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1B203D),
-      appBar: AppBar(
-        title: const Text("Create Poll"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              const Text("Poll Question", style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _questionController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Enter poll question...',
-                  hintStyle: TextStyle(color: Colors.white38),
-                  filled: true,
-                  fillColor: Colors.white10,
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              const Text("Options", style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 8),
-              ..._optionControllers.map((controller) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: TextFormField(
-                    controller: controller,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'Option',
-                      hintStyle: TextStyle(color: Colors.white38),
-                      filled: true,
-                      fillColor: Colors.white10,
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) => value!.isEmpty ? 'Required' : null,
-                  ),
-                );
-              }),
-              TextButton.icon(
-                onPressed: _addOption,
-                icon: const Icon(Icons.add, color: Colors.white70),
-                label: const Text("Add Option", style: TextStyle(color: Colors.white70)),
-              ),
-              Row(
-                children: [
-                  Switch(
-                    value: _allowMultipleVotes,
-                    onChanged: (val) => setState(() => _allowMultipleVotes = val),
-                    activeColor: Colors.greenAccent,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text("Allow multiple votes", style: TextStyle(color: Colors.white70)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                onPressed: _isSubmitting ? null : _submitPoll,
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Create Poll"),
-              )
-            ],
-          ),
+    return Stack(children: [
+      Positioned.fill(
+        child: Image.asset(
+          'assets/images/khaberny_background.png',
+          fit: BoxFit.cover,
         ),
       ),
-    );
+      Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text("Create Poll",
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              )),
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                const Text("Poll Question",
+                    style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _questionController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'Enter poll question...',
+                    hintStyle: TextStyle(color: Colors.white38),
+                    filled: true,
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                const Text("Options", style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 8),
+                ..._optionControllers.map((controller) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: TextFormField(
+                      controller: controller,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'Option',
+                        hintStyle: TextStyle(color: Colors.white38),
+                        filled: true,
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value!.isEmpty ? 'Required' : null,
+                    ),
+                  );
+                }),
+                TextButton.icon(
+                  onPressed: _addOption,
+                  icon: const Icon(Icons.add, color: Colors.white70),
+                  label: const Text("Add Option",
+                      style: TextStyle(color: Colors.white70)),
+                ),
+                Row(
+                  children: [
+                    Switch(
+                      value: _allowMultipleVotes,
+                      onChanged: (val) =>
+                          setState(() => _allowMultipleVotes = val),
+                      activeColor: Colors.greenAccent,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text("Allow multiple votes",
+                        style: TextStyle(color: Colors.white70)),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                  onPressed: _isSubmitting ? null : _submitPoll,
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Create Poll"),
+                )
+              ],
+            ),
+          ),
+        ),
+      )
+    ]);
   }
 }

@@ -34,213 +34,227 @@ class _ApproveAdsScreenState extends State<ApproveAdsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1B203D),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text("My Advertisements"),
-        centerTitle: true,
+    return Stack(children: [
+      Positioned.fill(
+        child: Image.asset(
+          'assets/images/khaberny_background.png',
+          fit: BoxFit.cover,
+        ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                TextField(
-                  onChanged: (value) => setState(() => _search = value),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "SEARCH BY AD TITLE...",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    prefixIcon: const Icon(Icons.search, color: Colors.white54),
-                    filled: true,
-                    fillColor: Colors.white10,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+      Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text("My Advertisements",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          iconTheme: const IconThemeData(color: Colors.white),
+          centerTitle: true,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  TextField(
+                    onChanged: (value) => setState(() => _search = value),
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "SEARCH BY AD TITLE...",
+                      hintStyle: const TextStyle(color: Colors.white54),
+                      prefixIcon:
+                          const Icon(Icons.search, color: Colors.white54),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        dropdownColor: const Color(0xFF1B203D),
-                        items: _categories
-                            .map((cat) => DropdownMenuItem(
-                                  value: cat,
-                                  child: Text(cat,
-                                      style:
-                                          const TextStyle(color: Colors.white)),
-                                ))
-                            .toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedCategory = val!),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          labelText: 'Category',
-                          labelStyle: const TextStyle(color: Colors.white70),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          dropdownColor: const Color(0xFF1B203D),
+                          items: _categories
+                              .map((cat) => DropdownMenuItem(
+                                    value: cat,
+                                    child: Text(cat,
+                                        style: const TextStyle(
+                                            color: Colors.white)),
+                                  ))
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedCategory = val!),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white10,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            labelText: 'Category',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        dropdownColor: const Color(0xFF1B203D),
-                        items: ['All', 'Pending', 'Approved', 'Denied']
-                            .map((status) => DropdownMenuItem(
-                                  value: status,
-                                  child: Text(status,
-                                      style:
-                                          const TextStyle(color: Colors.white)),
-                                ))
-                            .toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedStatus = val!),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          labelText: 'Status',
-                          labelStyle: const TextStyle(color: Colors.white70),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedStatus,
+                          dropdownColor: const Color(0xFF1B203D),
+                          items: ['All', 'Pending', 'Approved', 'Denied']
+                              .map((status) => DropdownMenuItem(
+                                    value: status,
+                                    child: Text(status,
+                                        style: const TextStyle(
+                                            color: Colors.white)),
+                                  ))
+                              .toList(),
+                          onChanged: (val) =>
+                              setState(() => _selectedStatus = val!),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white10,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            labelText: 'Status',
+                            labelStyle: const TextStyle(color: Colors.white70),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('ads')
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('ads')
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                var ads = snapshot.data!.docs;
-                ads = ads.where((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final title = (data['title'] ?? '').toString().toLowerCase();
-                  final category = data['category']?.toString();
-                  final status = data['status']?.toString();
-                  return (_search.isEmpty ||
-                          title.contains(_search.toLowerCase())) &&
-                      (_selectedCategory == 'All' ||
-                          category == _selectedCategory) &&
-                      (_selectedStatus == 'All' || status == _selectedStatus);
-                }).toList();
+                  var ads = snapshot.data!.docs;
+                  ads = ads.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final title =
+                        (data['title'] ?? '').toString().toLowerCase();
+                    final category = data['category']?.toString();
+                    final status = data['status']?.toString();
+                    return (_search.isEmpty ||
+                            title.contains(_search.toLowerCase())) &&
+                        (_selectedCategory == 'All' ||
+                            category == _selectedCategory) &&
+                        (_selectedStatus == 'All' || status == _selectedStatus);
+                  }).toList();
 
-                if (ads.isEmpty) {
-                  return const Center(
-                    child: Text("No advertisements found.",
-                        style: TextStyle(color: Colors.white70)),
-                  );
-                }
-
-                return ListView.builder(
-                  itemCount: ads.length,
-                  itemBuilder: (context, index) {
-                    final ad = ads[index].data() as Map<String, dynamic>;
-                    final adId = ads[index].id;
-                    final status = ad['status'] ?? 'Pending';
-                    final date = (ad['createdAt'] as Timestamp?)?.toDate();
-
-                    return Card(
-                      color: Colors.white10,
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if ((ad['imageUrl'] ?? '').toString().isNotEmpty)
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(12)),
-                              child: Image.network(
-                                ad['imageUrl'],
-                                height: 180,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(ad['title'] ?? 'No Title',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 4),
-                                Text(ad['description'] ?? '',
-                                    style:
-                                        const TextStyle(color: Colors.white70)),
-                                const SizedBox(height: 4),
-                                if (date != null)
-                                  Text(
-                                      "📅 ${date.day}-${date.month}-${date.year}",
-                                      style: const TextStyle(
-                                          color: Colors.white54)),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: status == 'Approved'
-                                            ? Colors.green
-                                            : status == 'Denied'
-                                                ? Colors.red
-                                                : Colors.orange,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(status,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12)),
-                                    ),
-                                    const Spacer(),
-                                    TextButton(
-                                      onPressed: () => _openAdDetailDialog(
-                                          context, adId, ad),
-                                      child: const Text("More Info >",
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
+                  if (ads.isEmpty) {
+                    return const Center(
+                      child: Text("No advertisements found.",
+                          style: TextStyle(color: Colors.white70)),
                     );
-                  },
-                );
-              },
+                  }
+
+                  return ListView.builder(
+                    itemCount: ads.length,
+                    itemBuilder: (context, index) {
+                      final ad = ads[index].data() as Map<String, dynamic>;
+                      final adId = ads[index].id;
+                      final status = ad['status'] ?? 'Pending';
+                      final date = (ad['createdAt'] as Timestamp?)?.toDate();
+
+                      return Card(
+                        color: Colors.white10,
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if ((ad['imageUrl'] ?? '').toString().isNotEmpty)
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12)),
+                                child: Image.network(
+                                  ad['imageUrl'],
+                                  height: 180,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(ad['title'] ?? 'No Title',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 4),
+                                  Text(ad['description'] ?? '',
+                                      style: const TextStyle(
+                                          color: Colors.white70)),
+                                  const SizedBox(height: 4),
+                                  if (date != null)
+                                    Text(
+                                        "📅 ${date.day}-${date.month}-${date.year}",
+                                        style: const TextStyle(
+                                            color: Colors.white54)),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: status == 'Approved'
+                                              ? Colors.green
+                                              : status == 'Denied'
+                                                  ? Colors.red
+                                                  : Colors.orange,
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(status,
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12)),
+                                      ),
+                                      const Spacer(),
+                                      TextButton(
+                                        onPressed: () => _openAdDetailDialog(
+                                            context, adId, ad),
+                                        child: const Text("More Info >",
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      )
+                                    ],
+                                  )
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
+    ]);
   }
 
   void _openAdDetailDialog(

@@ -124,249 +124,271 @@ class _MessageHomepageState extends State<MessageHomepage> {
       future: _getUserRole(currentUserId),
       builder: (context, snapshot) {
         final userRole = snapshot.data ?? 'citizen'; // default to citizen
-        return Scaffold(
-          backgroundColor: const Color(0xFF1B203D),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: Text('My Chats'),
-          ),
-          body: Column(
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: TextField(
-                  controller: _searchController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Search chats...',
-                    hintStyle: TextStyle(color: Colors.white54),
-                    filled: true,
-                    fillColor: Colors.white10,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    prefixIcon: Icon(Icons.search, color: Colors.white54),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear, color: Colors.white54),
-                            onPressed: () {
-                              setState(() {
-                                _searchQuery = '';
-                                _searchController.clear();
-                              });
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                ),
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/khaberny_background.png',
+                fit: BoxFit.cover,
               ),
-              Expanded(
-                child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: _getLatestChats(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-
-                    if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-
-                    final chats = snapshot.data!;
-
-                    if (chats.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No chats yet. Start a new conversation!',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      itemCount: chats.length,
-                      itemBuilder: (context, index) {
-                        final chat = chats[index];
-                        final lastMessage = chat['content'] ?? '';
-                        final lastMessageTime = chat['timestamp'] != null
-                            ? (chat['timestamp'] as Timestamp).toDate()
-                            : DateTime.now();
-
-                        // Figure out the other participant
-                        final participants = chat['chatId'].split('_');
-                        final otherParticipantId = participants
-                            .firstWhere((id) => id != currentUserId);
-
-                        return FutureBuilder<DocumentSnapshot>(
-                          future: _firestore
-                              .collection('users')
-                              .doc(otherParticipantId)
-                              .get(),
-                          builder: (context, userSnapshot) {
-                            String otherName = 'Unknown User';
-                            if (userSnapshot.hasData &&
-                                userSnapshot.data!.exists) {
-                              final userData = userSnapshot.data!.data()
-                                  as Map<String, dynamic>?;
-                              otherName = userData?['name'] ?? 'Unknown User';
-                            }
-                            // Search filter
-                            if (_searchQuery.isNotEmpty &&
-                                !otherName
-                                    .toLowerCase()
-                                    .contains(_searchQuery.toLowerCase())) {
-                              return SizedBox.shrink();
-                            }
-                            return Card(
-                              color: Colors.black26,
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Color(0xFF6C91BF),
-                                  child: Icon(Icons.person,
-                                      color: Color(0xFFFEFCFB)),
-                                ),
-                                title: Text(
-                                  otherName,
-                                  style: TextStyle(color: Color(0xFFFEFCFB)),
-                                ),
-                                subtitle: Text(
-                                  lastMessage,
-                                  style: TextStyle(color: Colors.white70),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: Text(
-                                  '${lastMessageTime.hour}:${lastMessageTime.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(color: Color(0xFF6C91BF)),
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ChatPage(
-                                        receiverId: otherParticipantId,
-                                        receiverName: otherName,
-                                      ),
-                                    ),
-                                  );
+            ),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  'My Chats',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                centerTitle: true,
+              ),
+              body: Column(
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search chats...',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        filled: true,
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        prefixIcon: Icon(Icons.search, color: Colors.white54),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear, color: Colors.white54),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchQuery = '';
+                                    _searchController.clear();
+                                  });
                                 },
-                              ),
+                              )
+                            : null,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: _getLatestChats(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        }
+
+                        if (!snapshot.hasData) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        final chats = snapshot.data!;
+
+                        if (chats.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No chats yet. Start a new conversation!',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          itemCount: chats.length,
+                          itemBuilder: (context, index) {
+                            final chat = chats[index];
+                            final lastMessage = chat['content'] ?? '';
+                            final lastMessageTime = chat['timestamp'] != null
+                                ? (chat['timestamp'] as Timestamp).toDate()
+                                : DateTime.now();
+
+                            // Figure out the other participant
+                            final participants = chat['chatId'].split('_');
+                            final otherParticipantId = participants
+                                .firstWhere((id) => id != currentUserId);
+
+                            return FutureBuilder<DocumentSnapshot>(
+                              future: _firestore
+                                  .collection('users')
+                                  .doc(otherParticipantId)
+                                  .get(),
+                              builder: (context, userSnapshot) {
+                                String otherName = 'Unknown User';
+                                if (userSnapshot.hasData &&
+                                    userSnapshot.data!.exists) {
+                                  final userData = userSnapshot.data!.data()
+                                      as Map<String, dynamic>?;
+                                  otherName =
+                                      userData?['name'] ?? 'Unknown User';
+                                }
+                                // Search filter
+                                if (_searchQuery.isNotEmpty &&
+                                    !otherName
+                                        .toLowerCase()
+                                        .contains(_searchQuery.toLowerCase())) {
+                                  return SizedBox.shrink();
+                                }
+                                return Card(
+                                  color: Colors.black26,
+                                  margin: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: Color(0xFF6C91BF),
+                                      child: Icon(Icons.person,
+                                          color: Color(0xFFFEFCFB)),
+                                    ),
+                                    title: Text(
+                                      otherName,
+                                      style:
+                                          TextStyle(color: Color(0xFFFEFCFB)),
+                                    ),
+                                    subtitle: Text(
+                                      lastMessage,
+                                      style: TextStyle(color: Colors.white70),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    trailing: Text(
+                                      '${lastMessageTime.hour}:${lastMessageTime.minute.toString().padLeft(2, '0')}',
+                                      style:
+                                          TextStyle(color: Color(0xFF6C91BF)),
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ChatPage(
+                                            receiverId: otherParticipantId,
+                                            receiverName: otherName,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
                             );
                           },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: Colors.blue,
-            child: Icon(Icons.chat),
-            onPressed: () async {
-              String? selectedUserId;
-              String? selectedUserName;
+              floatingActionButton: FloatingActionButton(
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.chat),
+                onPressed: () async {
+                  String? selectedUserId;
+                  String? selectedUserName;
 
-              await showDialog(
-                context: context,
-                builder: (context) {
-                  String search = '';
-                  return StatefulBuilder(
-                    builder: (context, setState) {
-                      return AlertDialog(
-                        title: Text('Start New Chat'),
-                        content: SizedBox(
-                          width: double.maxFinite,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TextField(
-                                decoration:
-                                    InputDecoration(hintText: 'Search users'),
-                                onChanged: (value) =>
-                                    setState(() => search = value),
-                              ),
-                              SizedBox(height: 10),
-                              Expanded(
-                                child: StreamBuilder<QuerySnapshot>(
-                                  stream: _firestore
-                                      .collection('users')
-                                      .where('uid', isNotEqualTo: currentUserId)
-                                      .snapshots(),
-                                  builder: (context, snapshot) {
-                                    if (!snapshot.hasData) {
-                                      return Center(
-                                          child: CircularProgressIndicator());
-                                    }
-                                    final users = snapshot.data!.docs
-                                        .map((doc) =>
-                                            doc.data() as Map<String, dynamic>)
-                                        .where((user) => (user['name'] ?? '')
-                                            .toLowerCase()
-                                            .contains(search.toLowerCase()))
-                                        .toList();
-                                    if (users.isEmpty) {
-                                      return Text('No users found');
-                                    }
-                                    return ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: users.length,
-                                      itemBuilder: (context, index) {
-                                        final user = users[index];
-                                        return ListTile(
-                                          title:
-                                              Text(user['name'] ?? 'Unknown'),
-                                          onTap: () {
-                                            selectedUserId = user['uid'];
-                                            selectedUserName = user['name'];
-                                            Navigator.pop(context);
+                  await showDialog(
+                    context: context,
+                    builder: (context) {
+                      String search = '';
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            title: Text('Start New Chat'),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    decoration: InputDecoration(
+                                        hintText: 'Search users'),
+                                    onChanged: (value) =>
+                                        setState(() => search = value),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Expanded(
+                                    child: StreamBuilder<QuerySnapshot>(
+                                      stream: _firestore
+                                          .collection('users')
+                                          .where('uid',
+                                              isNotEqualTo: currentUserId)
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        }
+                                        final users = snapshot.data!.docs
+                                            .map((doc) => doc.data()
+                                                as Map<String, dynamic>)
+                                            .where((user) => (user['name'] ??
+                                                    '')
+                                                .toLowerCase()
+                                                .contains(search.toLowerCase()))
+                                            .toList();
+                                        if (users.isEmpty) {
+                                          return Text('No users found');
+                                        }
+                                        return ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: users.length,
+                                          itemBuilder: (context, index) {
+                                            final user = users[index];
+                                            return ListTile(
+                                              title: Text(
+                                                  user['name'] ?? 'Unknown'),
+                                              onTap: () {
+                                                selectedUserId = user['uid'];
+                                                selectedUserName = user['name'];
+                                                Navigator.pop(context);
+                                              },
+                                            );
                                           },
                                         );
                                       },
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('Cancel'),
                               ),
                             ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text('Cancel'),
-                          ),
-                        ],
+                          );
+                        },
                       );
                     },
                   );
-                },
-              );
 
-              if (selectedUserId != null && selectedUserName != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatPage(
-                      receiverId: selectedUserId!,
-                      receiverName: selectedUserName!,
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
-          bottomNavigationBar: userRole == 'citizen'
-              ? _buildBottomNavBar(context, userRole)
-              : null, // Only show for citizen,
+                  if (selectedUserId != null && selectedUserName != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatPage(
+                          receiverId: selectedUserId!,
+                          receiverName: selectedUserName!,
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+              bottomNavigationBar: userRole == 'citizen'
+                  ? _buildBottomNavBar(context, userRole)
+                  : null, // Only show for citizen,
+            ),
+          ],
         );
       },
     );

@@ -23,6 +23,7 @@ import 'screens/citizen/citizen_report_problem_screen.dart';
 import 'screens/messaging/messageHomepage.dart';
 import 'screens/citizen/emergency_numbers_screen.dart';
 import 'screens/notifications/notification_screen.dart';
+import 'screens/government/government_problem_reports_screen.dart';
 
 class FirebaseMessagingService {
   Future<void> initialize() async {
@@ -84,6 +85,8 @@ class MyApp extends StatelessWidget {
         '/message': (context) => const MessageHomepage(),
         '/emergency': (context) => const EmergencyNumbersScreen(),
         '/notifications': (context) => const NotificationScreen(),
+        '/governmentProblemReports': (context) =>
+            const GovernmentProblemReportsScreen(),
       },
     );
   }

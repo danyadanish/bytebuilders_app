@@ -46,8 +46,18 @@ class NotificationScreen extends StatelessWidget {
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: const Text('Notifications'),
+                title: const Text(
+                  'Notifications',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
                 iconTheme: const IconThemeData(color: Colors.white),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
               ),
               body: StreamBuilder<List<Notifications>>(
                 stream:

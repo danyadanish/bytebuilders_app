@@ -14,16 +14,20 @@ class PollDetailScreen extends StatelessWidget {
         title: const Text("Poll Results"),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('posts').doc(pollId).get(),
+        future:
+            FirebaseFirestore.instance.collection('posts').doc(pollId).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text("Poll not found", style: TextStyle(color: Colors.white70)));
+            return const Center(
+                child: Text("Poll not found",
+                    style: TextStyle(color: Colors.white70)));
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -32,7 +36,8 @@ class PollDetailScreen extends StatelessWidget {
           final votes = List<int>.from(data['votes'] ?? []);
 
           final totalVotes = votes.fold(0, (a, b) => a + b);
-          final maxVotes = votes.isEmpty ? 0 : votes.reduce((a, b) => a > b ? a : b);
+          final maxVotes =
+              votes.isEmpty ? 0 : votes.reduce((a, b) => a > b ? a : b);
 
           final topOptions = <String>[];
           for (int i = 0; i < votes.length; i++) {
@@ -47,16 +52,22 @@ class PollDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(question, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(question,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-
                   ...List.generate(options.length, (i) {
-                    final percent = totalVotes == 0 ? 0.0 : (votes[i] / totalVotes) * 100;
+                    final percent =
+                        totalVotes == 0 ? 0.0 : (votes[i] / totalVotes) * 100;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(options[i], style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                        Text(options[i],
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 16)),
                         const SizedBox(height: 6),
                         Stack(
                           children: [
@@ -70,7 +81,8 @@ class PollDetailScreen extends StatelessWidget {
                             ),
                             Container(
                               height: 22,
-                              width: MediaQuery.of(context).size.width * (percent / 100),
+                              width: MediaQuery.of(context).size.width *
+                                  (percent / 100),
                               decoration: BoxDecoration(
                                 color: votes[i] == maxVotes && totalVotes > 0
                                     ? Colors.greenAccent
@@ -89,21 +101,22 @@ class PollDetailScreen extends StatelessWidget {
                       ],
                     );
                   }),
-
                   const SizedBox(height: 16),
-
                   if (totalVotes == 0)
-                    const Text("No votes yet.", style: TextStyle(color: Colors.white70, fontSize: 16))
+                    const Text("No votes yet.",
+                        style: TextStyle(color: Colors.white70, fontSize: 16))
                   else
                     Text(
                       topOptions.length == 1
                           ? "🏆 Top option: ${topOptions.first}"
                           : "🤝 Tie between: ${topOptions.join(', ')}",
-                      style: const TextStyle(color: Colors.greenAccent, fontSize: 18),
+                      style: const TextStyle(
+                          color: Colors.greenAccent, fontSize: 18),
                     ),
-
                   const SizedBox(height: 8),
-                  Text("Total votes: $totalVotes", style: const TextStyle(color: Colors.white38, fontSize: 14)),
+                  Text("Total votes: $totalVotes",
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 14)),
                 ],
               ),
             ),
