@@ -5,12 +5,21 @@ class GovernmentHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get government data from navigation arguments
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final governmentData = args?['governmentData'];
+    final governmentName =
+        governmentData != null && governmentData['name'] != null
+            ? governmentData['name'] as String
+            : "Khaberny Government Panel";
+
     return Scaffold(
       backgroundColor: const Color(0xFF1B203D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Khaberny Government Panel"),
+        title: Text(governmentName, textAlign: TextAlign.center),
         centerTitle: true,
       ),
       body: Padding(

@@ -77,13 +77,16 @@ class EmergencyNumbersScreen extends StatelessWidget {
           final contact = emergencyContacts[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 4,
             child: ListTile(
-              leading: const Icon(Icons.local_phone, color: Color(0xFF003366), size: 30),
+              leading: const Icon(Icons.local_phone,
+                  color: Color(0xFF003366), size: 30),
               title: Text(
                 contact['title']!,
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 18),
+                style: GoogleFonts.cairo(
+                    fontWeight: FontWeight.bold, fontSize: 18),
               ),
               trailing: IconButton(
                 icon: const Icon(Icons.call, color: Colors.green),
@@ -92,7 +95,8 @@ class EmergencyNumbersScreen extends StatelessWidget {
               onTap: () => _callNumber(contact['number']!),
               onLongPress: () => _copyNumber(context, contact['number']!),
               isThreeLine: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -118,6 +122,55 @@ class EmergencyNumbersScreen extends StatelessWidget {
               ),
             ),
           );
+        },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF161B33),
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        currentIndex:
+            2, // 0 = Feed, 1 = Chat, 2 = Emergency, 3 = Map, 4 = Notifications
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.collections_bookmark),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.phone),
+            label: 'Emergency',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notifications',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/citizen-feed');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/message');
+              break;
+            case 2:
+              // Already on Emergency
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/report');
+              break;
+            case 4:
+              Navigator.pushReplacementNamed(context, '/notifications');
+              break;
+          }
         },
       ),
     );

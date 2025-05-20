@@ -360,10 +360,13 @@ class _ApproveAdsScreenState extends State<ApproveAdsScreen> {
       // 2. Save notification in Firestore
       await FirebaseFirestore.instance.collection('notifications').add({
         'receiverId': ad['advertiserId'],
-        'message':
+        'senderId': 'government', // or your gov user id if you have one
+        'type': 'ad_approval',
+        'title': 'Ad Approved',
+        'content':
             'Your advertisement titled "${ad['title']}" has been approved.',
         'timestamp': Timestamp.now(),
-        'shown': false,
+        'isRead': false,
       });
 
       // 3. Send push notification
@@ -400,12 +403,14 @@ class _ApproveAdsScreenState extends State<ApproveAdsScreen> {
       // Save denial notification only
       await FirebaseFirestore.instance.collection('notifications').add({
         'receiverId': ad['advertiserId'],
-        'message':
+        'senderId': 'government',
+        'type': 'ad_denied',
+        'title': 'Ad Denied',
+        'content':
             'Your advertisement titled "${ad['title']}" was denied.\nReason: $denialReason',
         'timestamp': Timestamp.now(),
-        'shown': false,
+        'isRead': false,
       });
-
       // Show denial dialog
       await showDialog(
         context: context,

@@ -7,7 +7,6 @@ import 'screens/splash_screen.dart';
 import 'screens/account_type_selection_screen.dart';
 import 'screens/citizen/citizen_signup_screen.dart';
 import 'screens/advertiser/advertiser_signup_screen.dart';
-import 'screens/citizen/citizen_home_screen.dart';
 import 'screens/advertiser/advertiser_home_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/advertiser/advertiser_main_screen.dart';
@@ -68,7 +67,6 @@ class MyApp extends StatelessWidget {
         '/accountType': (context) => AccountTypeSelectionScreen(),
         '/citizenSignup': (context) => CitizenSignUpScreen(),
         '/advertiserSignup': (context) => AdvertiserSignUpScreen(),
-        '/citizenHome': (context) => CitizenHomeScreen(),
         '/advertiserHome': (context) => AdvertiserHomeScreen(),
         '/signIn': (context) => SignInScreen(),
         '/advertiser': (context) => const AdvertiserMainScreen(),

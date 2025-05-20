@@ -200,6 +200,55 @@ class _ReportProblemScreenState extends State<ReportProblemScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF161B33),
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        currentIndex:
+            3, // 0 = Feed, 1 = Chat, 2 = Emergency, 3 = Map, 4 = Notifications
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.collections_bookmark),
+            label: 'Feed',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.phone),
+            label: 'Emergency',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notifications',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/citizen-feed');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/message');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/emergency');
+              break;
+            case 3:
+              // Already on Report
+              break;
+            case 4:
+              Navigator.pushReplacementNamed(context, '/notifications');
+              break;
+          }
+        },
+      ),
     );
   }
 }

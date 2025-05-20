@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'notificationservice.dart';
 import 'notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
+
+  Future<String?> _getUserRole(String uid) async {
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    return doc.data()?['role'] as String?;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,56 +28,118 @@ class NotificationScreen extends StatelessWidget {
       );
     }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/khaberny_background.png',
-            fit: BoxFit.cover,
-          ),
-        ),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: const Text('Notifications'),
-            iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          body: StreamBuilder<List<Notifications>>(
-            stream: notificationService.getUserNotifications(currentUser.uid),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Text('Error: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.redAccent)),
-                );
-              }
+    return FutureBuilder<String?>(
+      future: _getUserRole(currentUser.uid),
+      builder: (context, roleSnapshot) {
+        final userRole = roleSnapshot.data ?? 'citizen'; // default to citizen
 
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/khaberny_background.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: const Text('Notifications'),
+                iconTheme: const IconThemeData(color: Colors.white),
+              ),
+              body: StreamBuilder<List<Notifications>>(
+                stream:
+                    notificationService.getUserNotifications(currentUser.uid),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error: ${snapshot.error}',
+                          style: const TextStyle(color: Colors.redAccent)),
+                    );
+                  }
 
-              final notifications = snapshot.data!;
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-              if (notifications.isEmpty) {
-                return const Center(
-                  child: Text('No notifications yet',
-                      style: TextStyle(color: Colors.white70)),
-                );
-              }
+                  final notifications = snapshot.data!;
 
-              return ListView.builder(
-                itemCount: notifications.length,
-                itemBuilder: (context, index) {
-                  final notification = notifications[index];
-                  return NotificationTile(notification: notification);
+                  if (notifications.isEmpty) {
+                    return const Center(
+                      child: Text('No notifications yet',
+                          style: TextStyle(color: Colors.white70)),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = notifications[index];
+                      return NotificationTile(notification: notification);
+                    },
+                  );
                 },
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+              bottomNavigationBar: _buildBottomNavBar(context, userRole),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomNavBar(BuildContext context, String userRole) {
+    List<BottomNavigationBarItem> items;
+    int currentIndex = 0;
+    void onTap(int index) {
+      if (userRole == 'citizen') {
+        switch (index) {
+          case 0:
+            Navigator.pushReplacementNamed(context, '/citizen-feed');
+            break;
+          case 1:
+            Navigator.pushReplacementNamed(context, '/message');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(context, '/emergency');
+            break;
+          case 3:
+            Navigator.pushReplacementNamed(context, '/report');
+            break;
+          case 4:
+            // Already on notifications
+            break;
+        }
+      }
+    }
+
+    if (userRole == 'citizen') {
+      items = const [
+        BottomNavigationBarItem(
+            icon: Icon(Icons.collections_bookmark), label: 'Feed'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded), label: 'Chat'),
+        BottomNavigationBarItem(icon: Icon(Icons.phone), label: 'Emergency'),
+        BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Report'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.notifications), label: 'Notifications'),
+      ];
+      currentIndex = 4;
+    } else {
+      // For advertisers or unknown roles, return an empty container (no navbar)
+      return const SizedBox.shrink();
+    }
+
+    return BottomNavigationBar(
+      backgroundColor: const Color(0xFF161B33),
+      selectedItemColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
+      currentIndex: currentIndex,
+      type: BottomNavigationBarType.fixed,
+      items: items,
+      onTap: onTap,
     );
   }
 }

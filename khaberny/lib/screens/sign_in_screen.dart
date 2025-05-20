@@ -38,7 +38,7 @@ class _SignInScreenState extends State<SignInScreen> {
             String role =
                 userDoc['role']; // Assuming 'role' field exists in Firestore
             if (role == 'citizen') {
-              Navigator.pushReplacementNamed(context, '/citizenHome');
+              Navigator.pushReplacementNamed(context, '/citizen-feed');
             } else if (role == 'advertiser') {
               Navigator.pushReplacementNamed(context, '/advertiser');
             } else {

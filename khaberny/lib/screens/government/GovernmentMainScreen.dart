@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:khaberny/screens/notifications/notification_screen.dart';
 import 'GovernmentHomeScreen.dart';
 import 'GovernmentFeedScreen.dart';
+import '../messaging/messageHomepage.dart';
 import 'government_delete_requests_screen.dart';
 
 class GovernmentMainScreen extends StatefulWidget {
@@ -21,7 +23,8 @@ class _GovernmentMainScreenState extends State<GovernmentMainScreen> {
       const GovernmentHomeScreen(),
       const GovernmentFeedScreen(),
       const GovernmentDeleteRequestsScreen(),
-      const Placeholder(),
+      const MessageHomepage(),
+      const NotificationScreen()
     ];
   }
 
@@ -54,6 +57,8 @@ class _GovernmentMainScreenState extends State<GovernmentMainScreen> {
               icon: Icon(Icons.delete), label: 'Delete Req'),
           BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_outline), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.notifications), label: 'Notifications'),
         ],
       ),
     );
