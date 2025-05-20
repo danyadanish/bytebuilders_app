@@ -1,6 +1,5 @@
 // advertiser_home_screen.dart
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -282,7 +281,7 @@ class _AdvertiserHomeScreenState extends State<AdvertiserHomeScreen> {
   Future<void> _incrementView(String postId) async {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     final snapshot = await ref.get();
-    final data = snapshot.data() as Map<String, dynamic>?;
+    final data = snapshot.data();
     final viewers = List<String>.from(data?['viewers'] ?? []);
     if (!viewers.contains(user!.uid)) {
       await ref.update({'viewers': FieldValue.arrayUnion([user!.uid])});

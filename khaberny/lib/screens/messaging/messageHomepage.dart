@@ -43,7 +43,7 @@ class _MessageHomepageState extends State<MessageHomepage> {
             shrinkWrap: true,
             itemCount: users.docs.length,
             itemBuilder: (context, index) {
-              final user = users.docs[index].data() as Map<String, dynamic>;
+              final user = users.docs[index].data();
               // Use null coalescing to handle missing fields
               final String userId = user['uid'] ?? '';
               final String userName = user['name'] ?? 'Unknown User';
