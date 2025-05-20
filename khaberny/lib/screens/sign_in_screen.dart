@@ -40,7 +40,7 @@ class _SignInScreenState extends State<SignInScreen> {
             if (role == 'citizen') {
               Navigator.pushReplacementNamed(context, '/citizenHome');
             } else if (role == 'advertiser') {
-              Navigator.pushReplacementNamed(context, '/advertiserHome');
+              Navigator.pushReplacementNamed(context, '/advertiser');
             } else {
               Fluttertoast.showToast(
                   msg: "Unknown role. Please contact support.");
