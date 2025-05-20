@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'advertiser_home_screen.dart';
 import 'add_advertisement_screen.dart';
 import 'my_advertisements_screen.dart';
 import 'advertiser_profile_screen.dart';
-import 'advertiser_notifications_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../notifications/notification_screen.dart';
 
 class AdvertiserMainScreen extends StatefulWidget {
   const AdvertiserMainScreen({super.key});
@@ -19,7 +19,7 @@ class _AdvertiserMainScreenState extends State<AdvertiserMainScreen> {
 
   final List<Widget> _screens = [
     const AdvertiserHomeScreen(),
-    const AdvertiserNotificationsScreen(),
+    const NotificationScreen(), // Changed to unified NotificationScreen
     const AddAdvertisementScreen(),
     const MyAdvertisementsScreen(),
     const AdvertiserProfileScreen(),
@@ -38,30 +38,34 @@ class _AdvertiserMainScreenState extends State<AdvertiserMainScreen> {
     final query = await FirebaseFirestore.instance
         .collection('notifications')
         .where('receiverId', isEqualTo: user.uid)
-        .where('shown', isEqualTo: false)
+        .where('isRead', isEqualTo: false) // Changed 'shown' to 'isRead'
         .get();
 
     for (final doc in query.docs) {
-      final message = doc['message'] ?? 'You have a new notification';
+      final title = doc['title'] ?? 'New Notification';
+      final content = doc['content'] ?? 'You have a new notification';
+
+      if (!mounted) return;
 
       // Show popup dialog
       await showDialog(
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: const Color(0xFF1B203D),
-          title: const Text("Notification", style: TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          content: Text(content, style: const TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("OK", style: TextStyle(color: Colors.tealAccent)),
+              child:
+                  const Text("OK", style: TextStyle(color: Colors.tealAccent)),
             ),
           ],
         ),
       );
 
-      // Mark this notification as shown
-      await doc.reference.update({'shown': true});
+      // Mark notification as read
+      await doc.reference.update({'isRead': true});
     }
   }
 

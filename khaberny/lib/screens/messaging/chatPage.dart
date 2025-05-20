@@ -1,7 +1,115 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import '../notifications/notification_sender.dart';
+import '../notifications/notificationservice.dart';
 
-class ChatPage extends StatelessWidget {
-  const ChatPage({super.key});
+class ChatPage extends StatefulWidget {
+  final String receiverId;
+  final String receiverName;
+
+  const ChatPage({
+    required this.receiverId,
+    required this.receiverName,
+    super.key,
+  });
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController _messageController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  late final String currentUserId;
+  late final String chatId;
+
+  @override
+  void initState() {
+    super.initState();
+    currentUserId = _auth.currentUser!.uid;
+    chatId = _getChatId(currentUserId, widget.receiverId);
+    _setupMessaging();
+  }
+
+  String _getChatId(String userId1, String userId2) {
+    final ids = [userId1, userId2]..sort();
+    return ids.join('_');
+  }
+
+  Future<void> _setupMessaging() async {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(alert: true, badge: true, sound: true);
+  }
+
+  Future<void> sendMessage() async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+    _messageController.clear();
+
+    try {
+      // Add message as a new document in the chats collection
+      await _firestore.collection('chats').add({
+        'chatId': chatId,
+        'senderId': currentUserId,
+        'receiverId': widget.receiverId,
+        'content': message,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Get sender info
+      final userDoc =
+          await _firestore.collection('users').doc(currentUserId).get();
+      final senderName = userDoc.data()?['name'] ?? 'Unknown User';
+
+      // Get receiver's FCM token
+      final receiverDoc =
+          await _firestore.collection('users').doc(widget.receiverId).get();
+      final fcmToken = receiverDoc.data()?['fcmToken'];
+
+      if (fcmToken != null) {
+        final notificationData = {
+          'type': 'chat_message',
+          'senderId': currentUserId,
+          'senderName': senderName,
+          'chatId': chatId,
+          'message': message,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        await sendPushNotificationFromFlutter(
+          backendUrl: 'http://192.168.1.105:3000/send-notification',
+          token: fcmToken,
+          title: 'New message from $senderName',
+          body: message,
+          data: notificationData,
+        );
+      }
+
+      // Add notification to Firestore for in-app notification center
+      await NotificationService().addNotification(
+        receiverId: widget.receiverId,
+        senderId: currentUserId,
+        type: 'message',
+        title: 'New message from $senderName',
+        content: message,
+        additionalData: {
+          'chatId': chatId,
+          'senderId': currentUserId,
+        },
+      );
+    } catch (e) {
+      print('Error sending message: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message. Please try again.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,56 +117,92 @@ class ChatPage extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.blueGrey[900],
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: AssetImage(
-                'assets/martina.jpg',
-              ), // Replace with your image asset
-            ),
-            SizedBox(width: 10),
-            Text('Martina Wolna'),
-            Spacer(),
-            CircleAvatar(
-              backgroundImage: AssetImage(
-                'assets/maciej.jpg',
-              ), // Replace with your image asset
-            ),
-            SizedBox(width: 10),
-            Text('Maciej Kowalski'),
-          ],
-        ),
+        title: Text(widget.receiverName),
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(10),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('chats')
+                  .where('chatId', isEqualTo: chatId)
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (context, messageSnapshot) {
+                if (messageSnapshot.hasError) {
+                  return Center(child: Text('Error: ${messageSnapshot.error}'));
+                }
+                if (!messageSnapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final messages = messageSnapshot.data!.docs;
+
+                if (messages.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Send your first message!',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  reverse: true,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message =
+                        messages[index].data() as Map<String, dynamic>;
+                    final isSentByMe = message['senderId'] == currentUserId;
+
+                    // Handle Firestore Timestamp or String
+                    String timeString = '';
+                    final ts = message['timestamp'];
+                    if (ts != null) {
+                      DateTime dt;
+                      if (ts is Timestamp) {
+                        dt = ts.toDate();
+                      } else if (ts is String) {
+                        dt = DateTime.tryParse(ts) ?? DateTime.now();
+                      } else {
+                        dt = DateTime.now();
+                      }
+                      timeString = dt.toLocal().toString().substring(11, 16);
+                    }
+
+                    return _buildMessageBubble(
+                      message: message['content'],
+                      isSentByMe: isSentByMe,
+                      timestamp: timeString,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            color: Colors.blueGrey[900],
+            child: Row(
               children: [
-                _buildMessageBubble(
-                  message: 'Hello, how are you?',
-                  isSentByMe: true,
-                  timestamp: '10:30 AM',
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Write a message...',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-                _buildMessageBubble(
-                  message: 'I\'m good, thanks! How about you?',
-                  isSentByMe: false,
-                  timestamp: '10:31 AM',
-                ),
-                _buildMessageBubble(
-                  message: 'Here is my email: martina@example.com',
-                  isSentByMe: true,
-                  timestamp: '10:32 AM',
-                ),
-                _buildMessageBubble(
-                  message: 'Thanks! Mine is maciej@example.com',
-                  isSentByMe: false,
-                  timestamp: '10:33 AM',
+                IconButton(
+                  icon: Icon(Icons.send, color: Colors.blue),
+                  onPressed: sendMessage,
                 ),
               ],
             ),
           ),
-          _buildInputField(),
         ],
       ),
     );
@@ -84,45 +228,12 @@ class ChatPage extends StatelessWidget {
             ),
             child: Text(message, style: TextStyle(color: Colors.white)),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.thumb_up, color: Colors.white54, size: 16),
-              SizedBox(width: 5),
-              Icon(Icons.help_outline, color: Colors.white54, size: 16),
-              SizedBox(width: 10),
-              Text(
-                timestamp,
-                style: TextStyle(color: Colors.white54, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputField() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      color: Colors.blueGrey[900],
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Write a message...',
-                hintStyle: TextStyle(color: Colors.white54),
-                border: InputBorder.none,
-              ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0, left: 8.0, bottom: 2.0),
+            child: Text(
+              timestamp,
+              style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.send, color: Colors.blue),
-            onPressed: () {
-              // Handle send action
-            },
           ),
         ],
       ),

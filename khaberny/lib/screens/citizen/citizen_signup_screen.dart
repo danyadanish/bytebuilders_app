@@ -61,7 +61,7 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
         });
 
         Fluttertoast.showToast(msg: "Account created successfully");
-        Navigator.pushReplacementNamed(context, '/citizenHome');
+        Navigator.pushReplacementNamed(context, '/citizen-feed');
       } catch (e) {
         Fluttertoast.showToast(msg: e.toString());
       }

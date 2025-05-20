@@ -1,14 +1,17 @@
 // ✅ lib/screens/government_feed_screen.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import './poll_detail_screen.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 class GovernmentFeedScreen extends StatefulWidget {
   const GovernmentFeedScreen({super.key});
 
   @override
   State<GovernmentFeedScreen> createState() => _GovernmentFeedScreenState();
 }
+
 class PollCard extends StatefulWidget {
   final String postId;
   final Map<String, dynamic> data;
@@ -50,16 +53,21 @@ class _PollCardState extends State<PollCard> {
 
     voters.add(userId);
 
-    await FirebaseFirestore.instance.collection('posts').doc(widget.postId).update({
+    await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .update({
       'votes': votes,
       'voters': voters,
     });
 
-    await FirebaseFirestore.instance.collection('polls').doc(widget.postId).update({
+    await FirebaseFirestore.instance
+        .collection('polls')
+        .doc(widget.postId)
+        .update({
       'votes': votes,
       'voters': voters,
     });
-
 
     setState(() => hasVoted = true);
   }
@@ -81,15 +89,21 @@ class _PollCardState extends State<PollCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(question, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(question,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             ...List.generate(options.length, (i) {
-              final percent = totalVotes == 0 ? 0 : ((votes[i] / totalVotes) * 100).round();
-              final selected = allowMultiple ? selectedIndexes.contains(i) : selectedSingleIndex == i;
+              final percent =
+                  totalVotes == 0 ? 0 : ((votes[i] / totalVotes) * 100).round();
+              final selected = allowMultiple
+                  ? selectedIndexes.contains(i)
+                  : selectedSingleIndex == i;
 
               return Container(
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white12,
                   borderRadius: BorderRadius.circular(10),
@@ -113,15 +127,20 @@ class _PollCardState extends State<PollCard> {
                           : Radio<int>(
                               value: i,
                               groupValue: selectedSingleIndex ?? -1,
-                              onChanged: (val) => setState(() => selectedSingleIndex = val),
+                              onChanged: (val) =>
+                                  setState(() => selectedSingleIndex = val),
                             )
                     else
                       const Icon(Icons.check_circle, color: Colors.greenAccent),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(options[i], style: const TextStyle(color: Colors.white))),
-                    Text('$percent%', style: const TextStyle(color: Colors.white54)),
+                    Expanded(
+                        child: Text(options[i],
+                            style: const TextStyle(color: Colors.white))),
+                    Text('$percent%',
+                        style: const TextStyle(color: Colors.white54)),
                     const SizedBox(width: 6),
-                    Text('${votes[i]}', style: const TextStyle(color: Colors.white38)),
+                    Text('${votes[i]}',
+                        style: const TextStyle(color: Colors.white38)),
                   ],
                 ),
               );
@@ -137,7 +156,8 @@ class _PollCardState extends State<PollCard> {
               )
             else
               const Center(
-                child: Text("You already voted", style: TextStyle(color: Colors.greenAccent)),
+                child: Text("You already voted",
+                    style: TextStyle(color: Colors.greenAccent)),
               )
           ],
         ),
@@ -152,7 +172,10 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
   bool _showOnlyMyPosts = false;
   String? _editingPostId;
 
-  Future<void> _openCreatePostDialog({String? existingContent, String? existingImageUrl, String? postId}) async {
+  Future<void> _openCreatePostDialog(
+      {String? existingContent,
+      String? existingImageUrl,
+      String? postId}) async {
     _postController.text = existingContent ?? '';
     _imageUrlController.text = existingImageUrl ?? '';
     _editingPostId = postId;
@@ -211,7 +234,10 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
     if (text.isEmpty) return;
 
     if (_editingPostId != null) {
-      await FirebaseFirestore.instance.collection('posts').doc(_editingPostId).update({
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(_editingPostId)
+          .update({
         'content': text,
         'imageUrl': imageUrl,
       });
@@ -243,8 +269,12 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
         title: const Text("Delete Post"),
         content: const Text("Are you sure you want to delete this post?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Delete")),
         ],
       ),
     );
@@ -258,7 +288,9 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     const userId = 'government';
     if (likes.contains(userId)) {
-      await ref.update({'likes': FieldValue.arrayRemove([userId])});
+      await ref.update({
+        'likes': FieldValue.arrayRemove([userId])
+      });
     } else {
       await ref.update({
         'likes': FieldValue.arrayUnion([userId]),
@@ -271,7 +303,9 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     const userId = 'government';
     if (dislikes.contains(userId)) {
-      await ref.update({'dislikes': FieldValue.arrayRemove([userId])});
+      await ref.update({
+        'dislikes': FieldValue.arrayRemove([userId])
+      });
     } else {
       await ref.update({
         'dislikes': FieldValue.arrayUnion([userId]),
@@ -300,10 +334,12 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
   Future<void> _incrementView(String postId) async {
     final ref = FirebaseFirestore.instance.collection('posts').doc(postId);
     final snapshot = await ref.get();
-    final data = snapshot.data() as Map<String, dynamic>?;
+    final data = snapshot.data();
     final viewers = List<String>.from(data?['viewers'] ?? []);
     if (!viewers.contains('government')) {
-      await ref.update({'viewers': FieldValue.arrayUnion(['government'])});
+      await ref.update({
+        'viewers': FieldValue.arrayUnion(['government'])
+      });
     }
   }
 
@@ -318,7 +354,8 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Comments", style: TextStyle(color: Colors.white, fontSize: 18)),
+            const Text("Comments",
+                style: TextStyle(color: Colors.white, fontSize: 18)),
             const Divider(color: Colors.white24),
             SizedBox(
               height: 300,
@@ -331,8 +368,10 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(comment['username'] ?? 'Unknown', style: const TextStyle(color: Colors.white70)),
-                        Text(comment['text'] ?? '', style: const TextStyle(color: Colors.white)),
+                        Text(comment['username'] ?? 'Unknown',
+                            style: const TextStyle(color: Colors.white70)),
+                        Text(comment['text'] ?? '',
+                            style: const TextStyle(color: Colors.white)),
                       ],
                     ),
                   );
@@ -345,6 +384,7 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
     );
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -362,10 +402,15 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
-            title: const Text("Khaberny", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.grey)),
+            title: const Text("Khaberny",
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
             actions: [
               IconButton(
-                icon: Icon(_showOnlyMyPosts ? Icons.list : Icons.person, color: Colors.grey),
+                icon: Icon(_showOnlyMyPosts ? Icons.list : Icons.person,
+                    color: Colors.grey),
                 onPressed: () {
                   setState(() {
                     _showOnlyMyPosts = !_showOnlyMyPosts;
@@ -382,7 +427,8 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                   child: InkWell(
                     onTap: () => _openCreatePostDialog(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: Colors.white12,
                         borderRadius: BorderRadius.circular(12),
@@ -391,7 +437,8 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                         children: [
                           Icon(Icons.edit, color: Colors.white70),
                           SizedBox(width: 10),
-                          Text("Hello, What’s on your mind ?", style: TextStyle(color: Colors.white70)),
+                          Text("Hello, What's on your mind ?",
+                              style: TextStyle(color: Colors.white70)),
                         ],
                       ),
                     ),
@@ -400,13 +447,22 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                 const Divider(color: Colors.white24),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection('posts').orderBy('createdAt', descending: true).snapshots(),
+                    stream: FirebaseFirestore.instance
+                        .collection('posts')
+                        .orderBy('createdAt', descending: true)
+                        .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                      if (!snapshot.hasData)
+                        return const Center(child: CircularProgressIndicator());
 
                       final posts = snapshot.data!.docs;
                       final filteredPosts = _showOnlyMyPosts
-                          ? posts.where((post) => (post.data() as Map<String, dynamic>)['authorId'] == 'government').toList()
+                          ? posts
+                              .where((post) =>
+                                  (post.data()
+                                      as Map<String, dynamic>)['authorId'] ==
+                                  'government')
+                              .toList()
                           : posts;
 
                       return ListView.builder(
@@ -415,10 +471,13 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                           final post = filteredPosts[index];
                           final data = post.data() as Map<String, dynamic>;
                           final content = data['content'] ?? '';
-                          final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                          final createdAt =
+                              (data['createdAt'] as Timestamp?)?.toDate();
                           final likes = List<String>.from(data['likes'] ?? []);
-                          final dislikes = List<String>.from(data['dislikes'] ?? []);
-                          final viewers = List<String>.from(data['viewers'] ?? []);
+                          final dislikes =
+                              List<String>.from(data['dislikes'] ?? []);
+                          final viewers =
+                              List<String>.from(data['viewers'] ?? []);
                           final comments = data['comments'] ?? [];
                           final postId = post.id;
                           final username = data['authorName'] ?? 'Citizen';
@@ -431,19 +490,22 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                               color: const Color.fromARGB(255, 0, 110, 253),
                               alignment: Alignment.centerLeft,
                               padding: const EdgeInsets.only(left: 20),
-                              child: const Icon(Icons.edit, color: Colors.white),
+                              child:
+                                  const Icon(Icons.edit, color: Colors.white),
                             ),
                             secondaryBackground: Container(
                               color: Colors.red,
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: 20),
-                              child: const Icon(Icons.delete, color: Colors.white),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
                             ),
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.endToStart) {
                                 await _deletePost(postId);
                                 return false;
-                              } else if (direction == DismissDirection.startToEnd) {
+                              } else if (direction ==
+                                  DismissDirection.startToEnd) {
                                 _openCreatePostDialog(
                                   existingContent: content,
                                   existingImageUrl: imageUrl,
@@ -456,25 +518,41 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                             child: GestureDetector(
                               onTap: () => _incrementView(postId),
                               child: Card(
-                                color: const Color.fromARGB(255, 85, 153, 182).withOpacity(0.3),
-                                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                color: const Color.fromARGB(255, 85, 153, 182)
+                                    .withOpacity(0.3),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          const CircleAvatar(radius: 16, backgroundImage: AssetImage('assets/avatar.png')),
+                                          const CircleAvatar(
+                                              radius: 16,
+                                              backgroundImage: AssetImage(
+                                                  'assets/avatar.png')),
                                           const SizedBox(width: 8),
-                                          Text(username, style: const TextStyle(color: Colors.white)),
+                                          Text(username,
+                                              style: const TextStyle(
+                                                  color: Colors.white)),
                                         ],
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        createdAt != null ? createdAt.toLocal().toString().split(' ')[0] : "Date Unknown",
-                                        style: const TextStyle(fontSize: 12, color: Colors.white60),
+                                        createdAt != null
+                                            ? createdAt
+                                                .toLocal()
+                                                .toString()
+                                                .split(' ')[0]
+                                            : "Date Unknown",
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white60),
                                       ),
                                       const SizedBox(height: 10),
                                       if (data['type'] == 'poll')
@@ -483,70 +561,288 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => PollDetailScreen(pollId: postId),
+                                                builder: (_) =>
+                                                    PollDetailScreen(
+                                                        pollId: postId),
                                               ),
                                             );
                                           },
-                                          child: PollCard(postId: postId, data: data),
+                                          child: PollCard(
+                                              postId: postId, data: data),
                                         )
-                                      else
-                                        Text(content, style: const TextStyle(fontSize: 16, color: Colors.white)),
-
+                                      else if (data['type'] == 'problem') ...[
+                                        Text(content,
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white)),
+                                        if (imageUrl.isNotEmpty)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 8.0),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.network(imageUrl,
+                                                  fit: BoxFit.cover),
+                                            ),
+                                          ),
+                                        const SizedBox(height: 8),
+                                        if (data['status'] != null)
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Status: ${data['status']}",
+                                                style: const TextStyle(
+                                                    color: Colors.greenAccent,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              if (data['solutionReason'] !=
+                                                  null)
+                                                Text(
+                                                  "Reason: ${data['solutionReason']}",
+                                                  style: const TextStyle(
+                                                      color: Colors.white70),
+                                                ),
+                                            ],
+                                          )
+                                        else
+                                          Row(
+                                            children: [
+                                              ElevatedButton.icon(
+                                                icon: const Icon(Icons.check),
+                                                style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.green),
+                                                label:
+                                                    const Text("Mark Solved"),
+                                                onPressed: () async {
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('posts')
+                                                      .doc(postId)
+                                                      .update({
+                                                    'status': 'Solved',
+                                                    'solutionReason':
+                                                        'Fixed by government',
+                                                  });
+                                                },
+                                              ),
+                                              const SizedBox(width: 10),
+                                              ElevatedButton.icon(
+                                                icon: const Icon(Icons.close),
+                                                style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        Colors.redAccent),
+                                                label: const Text("Not Solved"),
+                                                onPressed: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (_) {
+                                                      final reasonController =
+                                                          TextEditingController();
+                                                      return AlertDialog(
+                                                        backgroundColor:
+                                                            const Color(
+                                                                0xFF1B203D),
+                                                        title: const Text(
+                                                            "Reason",
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .white)),
+                                                        content: TextField(
+                                                          controller:
+                                                              reasonController,
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .white),
+                                                          decoration:
+                                                              const InputDecoration(
+                                                            hintText:
+                                                                "Enter reason",
+                                                            hintStyle: TextStyle(
+                                                                color: Colors
+                                                                    .white38),
+                                                          ),
+                                                        ),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    context),
+                                                            child: const Text(
+                                                                "Cancel",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .grey)),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed:
+                                                                () async {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'posts')
+                                                                  .doc(postId)
+                                                                  .update({
+                                                                'status':
+                                                                    'Not Solved',
+                                                                'solutionReason':
+                                                                    reasonController
+                                                                        .text
+                                                                        .trim(),
+                                                              });
+                                                              Navigator.pop(
+                                                                  context);
+                                                            },
+                                                            child: const Text(
+                                                                "Submit",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .redAccent)),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                      ] else
+                                        Text(content,
+                                            style: const TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.white)),
                                       const SizedBox(height: 10),
                                       if (imageUrl.isNotEmpty)
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(imageUrl, fit: BoxFit.cover),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          child: Image.network(imageUrl,
+                                              fit: BoxFit.cover),
+                                        ),
+                                      if (data['latitude'] != null &&
+                                          data['longitude'] != null)
+                                        Container(
+                                          height: 200,
+                                          margin:
+                                              const EdgeInsets.only(top: 10),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: FlutterMap(
+                                              options: MapOptions(
+                                                initialCenter: LatLng(
+                                                    data['latitude'],
+                                                    data['longitude']),
+                                                initialZoom: 15,
+                                                interactionOptions:
+                                                    const InteractionOptions(
+                                                        flags: InteractiveFlag
+                                                            .none),
+                                              ),
+                                              children: [
+                                                TileLayer(
+                                                  urlTemplate:
+                                                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                  subdomains: const [
+                                                    'a',
+                                                    'b',
+                                                    'c'
+                                                  ],
+                                                ),
+                                                MarkerLayer(
+                                                  markers: [
+                                                    Marker(
+                                                      point: LatLng(
+                                                          data['latitude'],
+                                                          data['longitude']),
+                                                      width: 40,
+                                                      height: 40,
+                                                      child: const Icon(
+                                                          Icons.location_pin,
+                                                          color: Colors.red,
+                                                          size: 30),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       const SizedBox(height: 10),
                                       Row(
                                         children: [
                                           IconButton(
                                             icon: Icon(
-                                              likes.contains('government') ? Icons.favorite : Icons.favorite_border,
+                                              likes.contains('government')
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
                                               color: Colors.red,
                                             ),
-                                            onPressed: () => _toggleLike(postId, likes, dislikes),
+                                            onPressed: () => _toggleLike(
+                                                postId, likes, dislikes),
                                           ),
-                                          Text('${likes.length}', style: const TextStyle(color: Colors.white70)),
+                                          Text('${likes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white70)),
                                           const SizedBox(width: 12),
                                           IconButton(
-                                            icon: const Icon(Icons.thumb_down, color: Colors.white38),
-                                            onPressed: () => _toggleDislike(postId, likes, dislikes),
+                                            icon: const Icon(Icons.thumb_down,
+                                                color: Colors.white38),
+                                            onPressed: () => _toggleDislike(
+                                                postId, likes, dislikes),
                                           ),
-                                          Text('${dislikes.length}', style: const TextStyle(color: Colors.white38)),
+                                          Text('${dislikes.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white38)),
                                           const Spacer(),
-                                          const Icon(Icons.remove_red_eye, color: Colors.white38, size: 20),
+                                          const Icon(Icons.remove_red_eye,
+                                              color: Colors.white38, size: 20),
                                           const SizedBox(width: 4),
-                                          Text('${viewers.length}', style: const TextStyle(color: Colors.white38))
+                                          Text('${viewers.length}',
+                                              style: const TextStyle(
+                                                  color: Colors.white38))
                                         ],
                                       ),
                                       TextButton(
-                                        onPressed: () => _showCommentsDialog(comments),
-                                        child: const Text("View Comments", style: TextStyle(color: Colors.white70)),
+                                        onPressed: () =>
+                                            _showCommentsDialog(comments),
+                                        child: const Text("View Comments",
+                                            style: TextStyle(
+                                                color: Colors.white70)),
                                       ),
                                       Row(
                                         children: [
                                           Expanded(
                                             child: TextField(
                                               controller: commentController,
-                                              style: const TextStyle(color: Colors.white),
+                                              style: const TextStyle(
+                                                  color: Colors.white),
                                               decoration: InputDecoration(
                                                 hintText: "Write a comment",
-                                                hintStyle: const TextStyle(color: Colors.white70),
+                                                hintStyle: const TextStyle(
+                                                    color: Colors.white70),
                                                 filled: true,
                                                 fillColor: Colors.white10,
                                                 border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                   borderSide: BorderSide.none,
                                                 ),
                                               ),
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(Icons.send, color: Colors.white),
+                                            icon: const Icon(Icons.send,
+                                                color: Colors.white),
                                             onPressed: () {
-                                              _addComment(postId, commentController.text);
+                                              _addComment(postId,
+                                                  commentController.text);
                                               commentController.clear();
                                             },
                                           )

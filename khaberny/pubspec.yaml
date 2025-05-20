@@ -26,6 +26,7 @@ dependencies:
   cloud_firestore: ^5.6.7
   firebase_storage: ^12.4.5
   firebase_messaging: ^15.2.5  
+  flutter_local_notifications: ^17.0.0
 
   # Image picker for selecting ad images
   image_picker: ^1.0.7
@@ -36,6 +37,13 @@ dependencies:
   #  Charts and Progress Indicators for Ad Report
   percent_indicator: ^4.2.2
   fl_chart: ^1.0.0
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.0
+  permission_handler: ^12.0.0+1
+  http: ^1.2.0
+  flutter_dotenv: ^5.0.2
+  url_launcher: ^6.3.1
+
 
 dev_dependencies:
   flutter_test:
