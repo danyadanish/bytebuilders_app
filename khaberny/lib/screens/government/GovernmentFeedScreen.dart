@@ -455,8 +455,9 @@ class _GovernmentFeedScreenState extends State<GovernmentFeedScreen> {
                         .orderBy('createdAt', descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData)
+                      if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
+                      }
 
                       final posts = snapshot.data!.docs;
                       final filteredPosts = _showOnlyMyPosts

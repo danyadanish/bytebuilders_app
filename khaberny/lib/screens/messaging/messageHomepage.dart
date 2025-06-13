@@ -29,7 +29,7 @@ class _MessageHomepageState extends State<MessageHomepage> {
     return _firestore.collection('chats').snapshots().map((snapshot) {
       // Filter messages where currentUser is sender or receiver
       final allMessages = snapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => doc.data())
           .where((msg) =>
               msg['senderId'] == currentUserId ||
               msg['receiverId'] == currentUserId)
