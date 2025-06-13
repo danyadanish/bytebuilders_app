@@ -1,6 +1,94 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AccountTypeSelectionScreen extends StatelessWidget {
+  const AccountTypeSelectionScreen({super.key});
+
+  static const String governmentAccessCode = "1234";
+
+  void _showGovernmentCodeDialog(BuildContext context) {
+    final TextEditingController codeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("Enter Government Access Code"),
+          content: TextField(
+            controller: codeController,
+            obscureText: true,
+            decoration: const InputDecoration(hintText: "Enter code"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final enteredCode = codeController.text.trim();
+                if (enteredCode.isEmpty) return;
+
+                if (enteredCode != governmentAccessCode) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Incorrect code. Try again."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Fetch the government account document by role
+                final query = await FirebaseFirestore.instance
+                    .collection('users')
+                    .where('role', isEqualTo: 'government')
+                    .limit(1)
+                    .get();
+
+                if (query.docs.isNotEmpty) {
+                  final govDoc = query.docs.first;
+                  final govData = govDoc.data();
+                  final govEmail = govData['email'] as String;
+                  // Use a secure password for the government account
+                  const govPassword =
+                      'pass123'; // Replace with your real password
+                  print(govEmail);
+                  try {
+                    // Sign in with Firebase Auth
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: govEmail,
+                      password: govPassword,
+                    );
+
+                    Navigator.pop(ctx);
+                    Navigator.pushReplacementNamed(context, '/government');
+                  } on FirebaseAuthException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Authentication failed: ${e.message}"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Government account not found."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Enter"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +105,7 @@ class AccountTypeSelectionScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 24),
-                Text(
+                const Text(
                   'CHOOSE YOUR ACCOUNT TYPE',
                   style: TextStyle(
                     color: Colors.white,
@@ -33,13 +121,14 @@ class AccountTypeSelectionScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     children: [
                       AccountTypeCard(
-                        backgroundColor: Color(0xFF6FA8DC),
+                        backgroundColor: const Color(0xFF6FA8DC),
                         textColor: Colors.white,
                         title: 'Advertising Agency',
                         description:
                             'Add your Advertisements to our Platform to allow others to see your services.',
                         image: 'assets/ads.jpg',
-                        onTap: () => Navigator.pushNamed(context, '/advertiserSignup'),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/advertiserSignup'),
                       ),
                       const SizedBox(height: 28),
                       AccountTypeCard(
@@ -49,8 +138,34 @@ class AccountTypeSelectionScreen extends StatelessWidget {
                         description:
                             'Find out important Government Announcements, Access Emergency Services quickly, Engage with Government Institutions directly.',
                         image: 'assets/citizen.jpg',
-                        onTap: () => Navigator.pushNamed(context, '/citizenSignup'),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/citizenSignup'),
                       ),
+                      const SizedBox(height: 28),
+                      AccountTypeCard(
+                        backgroundColor: const Color(0xFF0A1A3A), // Dark blue
+                        textColor: Colors.white,
+                        title: 'Government',
+                        description:
+                            'Access tools to manage ads, polls, and notifications. Requires a secure access code.',
+                        image: 'assets/images/government.jpg', // Add this image
+                        onTap: () => _showGovernmentCodeDialog(context),
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/signIn'),
+                          child: const Text(
+                            "Already have an account? Sign in",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -72,6 +187,7 @@ class AccountTypeCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const AccountTypeCard({
+    super.key,
     required this.title,
     required this.description,
     required this.image,
@@ -82,7 +198,7 @@ class AccountTypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector( // 🔥 enables tapping
+    return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 170,

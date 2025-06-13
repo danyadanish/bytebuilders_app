@@ -1,25 +1,41 @@
+// signup screen for citizen
+//implemented concepts: form validation, date picker, toast messages, navigation, and firebase authentication
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-class AdvertiserSignUpScreen extends StatefulWidget {
+class CitizenSignUpScreen extends StatefulWidget {
+  const CitizenSignUpScreen({super.key});
+
   @override
-  _AdvertiserSignUpScreenState createState() => _AdvertiserSignUpScreenState();
+  _CitizenSignUpScreenState createState() => _CitizenSignUpScreenState();
 }
 
-class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
+class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final companyController = TextEditingController();
-  final industryController = TextEditingController();
-  final countryController = TextEditingController();
   final phoneController = TextEditingController();
+  final dobController = TextEditingController();
+  final countryController = TextEditingController();
+  final cityController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  void _registerAdvertiser() async {
+  Future<void> _selectDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      dobController.text = picked.toIso8601String().split("T").first;
+    }
+  }
+
+  void _registerCitizen() async {
     if (_formKey.currentState!.validate()) {
       if (passwordController.text != confirmPasswordController.text) {
         Fluttertoast.showToast(msg: "Passwords do not match");
@@ -39,15 +55,15 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
           'uid': userCredential.user!.uid,
           'name': nameController.text.trim(),
           'email': emailController.text.trim(),
-          'company': companyController.text.trim(),
-          'industry': industryController.text.trim(),
-          'country': countryController.text.trim(),
           'phone': phoneController.text.trim(),
-          'role': 'advertiser',
+          'dob': dobController.text.trim(),
+          'country': countryController.text.trim(),
+          'city': cityController.text.trim(),
+          'role': 'citizen',
         });
 
         Fluttertoast.showToast(msg: "Account created successfully");
-        Navigator.pushReplacementNamed(context, '/signIn');
+        Navigator.pushReplacementNamed(context, '/citizen-feed');
       } catch (e) {
         Fluttertoast.showToast(msg: e.toString());
       }
@@ -63,7 +79,7 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
         elevation: 0,
         leading: BackButton(color: Colors.white),
         title: Text(
-          "Register as an Advertising Agency",
+          "Register as a Citizen",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -76,9 +92,12 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/khaberny_background.png',
-              fit: BoxFit.cover,
+            child: Container(
+              color: const Color(0xFF1B203D).withOpacity(0.95),
+              child: Image.asset(
+                'assets/images/khaberny_background.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           SafeArea(
@@ -92,13 +111,13 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(199, 107, 122, 161).withOpacity(0.45),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
                         children: [
                           Text(
-                            "Register as an Advertising Agency",
+                            "Register as a Citizen",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -108,7 +127,7 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            "Add your Advertisements to our Platform to allow others to see your services.",
+                            "Find out important Government Announcements, Access Emergency Services quickly, Engage with Government Institutions directly.",
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 13,
@@ -118,13 +137,24 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                           ),
                           const SizedBox(height: 24),
                           buildTextField("Full Name", nameController),
-                          buildTextField("Email", emailController, type: TextInputType.emailAddress),
-                          buildTextField("Company Name", companyController),
-                          buildTextField("Industry", industryController),
+                          buildTextField("Email", emailController,
+                              type: TextInputType.emailAddress),
+                          buildTextField("Phone", phoneController,
+                              type: TextInputType.phone),
+                          GestureDetector(
+                            onTap: _selectDate,
+                            child: AbsorbPointer(
+                              child: buildTextField(
+                                  "Date of Birth (YYYY-MM-DD)", dobController),
+                            ),
+                          ),
                           buildTextField("Country", countryController),
-                          buildTextField("Phone", phoneController, type: TextInputType.phone),
-                          buildTextField("Password", passwordController, isPassword: true),
-                          buildTextField("Confirm Password", confirmPasswordController, isPassword: true),
+                          buildTextField("City", cityController),
+                          buildTextField("Password", passwordController,
+                              isPassword: true),
+                          buildTextField(
+                              "Confirm Password", confirmPasswordController,
+                              isPassword: true),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
@@ -137,7 +167,7 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                                 ),
                                 elevation: 4,
                               ),
-                              onPressed: _registerAdvertiser,
+                              onPressed: _registerCitizen,
                               child: Text(
                                 "Register",
                                 style: TextStyle(
@@ -152,7 +182,8 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
                           const SizedBox(height: 16),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(context, '/signIn'); // Redirect to the login page
+                              Navigator.pushNamed(context,
+                                  '/signIn'); // Redirect to the login page
                             },
                             child: Text(
                               "Already have an account? Sign in here",
@@ -186,18 +217,19 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
         controller: controller,
         keyboardType: type,
         obscureText: isPassword,
-        style: TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: Colors.black87, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+          labelStyle: TextStyle(color: Colors.black54, fontSize: 13),
           filled: true,
-          fillColor: Colors.white.withOpacity(0.45),
+          fillColor: Color(0xFFF2F2F2).withOpacity(0.85),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
         ),
-        validator: (value) => value == null || value.isEmpty ? "Required field" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "Required field" : null,
       ),
     );
   }

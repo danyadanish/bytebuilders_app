@@ -1,39 +1,27 @@
-// signup screen for citizen
-//implemented concepts: form validation, date picker, toast messages, navigation, and firebase authentication
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-class CitizenSignUpScreen extends StatefulWidget {
+class AdvertiserSignUpScreen extends StatefulWidget {
+  const AdvertiserSignUpScreen({super.key});
+
   @override
-  _CitizenSignUpScreenState createState() => _CitizenSignUpScreenState();
+  _AdvertiserSignUpScreenState createState() => _AdvertiserSignUpScreenState();
 }
 
-class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
+class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final dobController = TextEditingController();
+  final companyController = TextEditingController();
+  final industryController = TextEditingController();
   final countryController = TextEditingController();
-  final cityController = TextEditingController();
+  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  Future<void> _selectDate() async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(2000),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      dobController.text = picked.toIso8601String().split("T").first;
-    }
-  }
-
-  void _registerCitizen() async {
+  void _registerAdvertiser() async {
     if (_formKey.currentState!.validate()) {
       if (passwordController.text != confirmPasswordController.text) {
         Fluttertoast.showToast(msg: "Passwords do not match");
@@ -53,15 +41,15 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
           'uid': userCredential.user!.uid,
           'name': nameController.text.trim(),
           'email': emailController.text.trim(),
-          'phone': phoneController.text.trim(),
-          'dob': dobController.text.trim(),
+          'company': companyController.text.trim(),
+          'industry': industryController.text.trim(),
           'country': countryController.text.trim(),
-          'city': cityController.text.trim(),
-          'role': 'citizen',
+          'phone': phoneController.text.trim(),
+          'role': 'advertiser',
         });
 
         Fluttertoast.showToast(msg: "Account created successfully");
-        Navigator.pushReplacementNamed(context, '/citizenHome');
+        Navigator.pushReplacementNamed(context, '/signIn');
       } catch (e) {
         Fluttertoast.showToast(msg: e.toString());
       }
@@ -77,7 +65,7 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
         elevation: 0,
         leading: BackButton(color: Colors.white),
         title: Text(
-          "Register as a Citizen",
+          "Register as an Advertising Agency",
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -90,12 +78,9 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Container(
-              color: const Color(0xFF1B203D).withOpacity(0.95),
-              child: Image.asset(
-                'assets/images/khaberny_background.png',
-                fit: BoxFit.cover,
-              ),
+            child: Image.asset(
+              'assets/images/khaberny_background.png',
+              fit: BoxFit.cover,
             ),
           ),
           SafeArea(
@@ -109,13 +94,14 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: const Color.fromARGB(199, 107, 122, 161)
+                            .withOpacity(0.45),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
                         children: [
                           Text(
-                            "Register as a Citizen",
+                            "Register as an Advertising Agency",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 20,
@@ -125,7 +111,7 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            "Find out important Government Announcements, Access Emergency Services quickly, Engage with Government Institutions directly.",
+                            "Add your Advertisements to our Platform to allow others to see your services.",
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 13,
@@ -135,18 +121,18 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                           ),
                           const SizedBox(height: 24),
                           buildTextField("Full Name", nameController),
-                          buildTextField("Email", emailController, type: TextInputType.emailAddress),
-                          buildTextField("Phone", phoneController, type: TextInputType.phone),
-                          GestureDetector(
-                            onTap: _selectDate,
-                            child: AbsorbPointer(
-                              child: buildTextField("Date of Birth (YYYY-MM-DD)", dobController),
-                            ),
-                          ),
+                          buildTextField("Email", emailController,
+                              type: TextInputType.emailAddress),
+                          buildTextField("Company Name", companyController),
+                          buildTextField("Industry", industryController),
                           buildTextField("Country", countryController),
-                          buildTextField("City", cityController),
-                          buildTextField("Password", passwordController, isPassword: true),
-                          buildTextField("Confirm Password", confirmPasswordController, isPassword: true),
+                          buildTextField("Phone", phoneController,
+                              type: TextInputType.phone),
+                          buildTextField("Password", passwordController,
+                              isPassword: true),
+                          buildTextField(
+                              "Confirm Password", confirmPasswordController,
+                              isPassword: true),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
@@ -159,7 +145,7 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                                 ),
                                 elevation: 4,
                               ),
-                              onPressed: _registerCitizen,
+                              onPressed: _registerAdvertiser,
                               child: Text(
                                 "Register",
                                 style: TextStyle(
@@ -174,7 +160,8 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
                           const SizedBox(height: 16),
                           GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(context, '/signIn'); // Redirect to the login page
+                              Navigator.pushNamed(context,
+                                  '/signIn'); // Redirect to the login page
                             },
                             child: Text(
                               "Already have an account? Sign in here",
@@ -208,18 +195,20 @@ class _CitizenSignUpScreenState extends State<CitizenSignUpScreen> {
         controller: controller,
         keyboardType: type,
         obscureText: isPassword,
-        style: TextStyle(color: Colors.black87, fontSize: 14),
+        style: TextStyle(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: Colors.black54, fontSize: 13),
+          labelStyle:
+              TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
           filled: true,
-          fillColor: Color(0xFFF2F2F2).withOpacity(0.85),
+          fillColor: Colors.white.withOpacity(0.45),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
         ),
-        validator: (value) => value == null || value.isEmpty ? "Required field" : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? "Required field" : null,
       ),
     );
   }
