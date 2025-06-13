@@ -47,7 +47,7 @@ class _AdvertiserSignUpScreenState extends State<AdvertiserSignUpScreen> {
         });
 
         Fluttertoast.showToast(msg: "Account created successfully");
-        Navigator.pushReplacementNamed(context, '/advertiserHome');
+        Navigator.pushReplacementNamed(context, '/signIn');
       } catch (e) {
         Fluttertoast.showToast(msg: e.toString());
       }
