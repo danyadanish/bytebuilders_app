@@ -1,3 +1,5 @@
+//main.dart
+//implemented concepts: Firebase Core, Firebase Messaging, MaterialApp, StatelessWidget, StatefulWidget, Routes, WidgetsFlutterBinding
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -39,6 +41,22 @@ class MyApp extends StatelessWidget {
         '/citizenHome': (context) => CitizenHomeScreen(),
         '/advertiserHome': (context) => AdvertiserHomeScreen(),
         '/signIn': (context) => SignInScreen(),
+        '/advertiser': (context) => const AdvertiserMainScreen(),
+        '/createAd': (context) => AddAdvertisementScreen(),
+        '/myAds': (context) => MyAdvertisementsScreen(),
+        '/profile': (context) => AdvertiserProfileScreen(),
+        '/reportOverview': (context) => const Placeholder(),
+        '/government': (context) => const GovernmentMainScreen(),
+        '/approveAds': (context) => const ApproveAdsScreen(),
+        '/createPoll': (context) => const CreatePollScreen(),
+        '/polls': (context) => const PollListScreen(),
+        '/deleteRequests': (context) => const GovernmentDeleteRequestsScreen(),
+        '/citizen-feed': (context) => const CitizenFeedScreen(),
+        '/report': (context) => const ReportProblemScreen(),
+        '/message': (context) => const MessageHomepage(),
+        '/emergency': (context) => const EmergencyNumbersScreen(),
+        '/notifications': (context) => const NotificationScreen(),
+        '/governmentProblemReports': (context) => const GovernmentProblemReportsScreen(),
       },
     );
   }

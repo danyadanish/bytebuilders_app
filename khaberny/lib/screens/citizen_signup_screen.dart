@@ -1,3 +1,5 @@
+// signup screen for citizen
+//implemented concepts: form validation, date picker, toast messages, navigation, and firebase authentication
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
